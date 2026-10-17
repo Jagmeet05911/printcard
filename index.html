@@ -396,3 +396,59 @@ document.getElementById("pdfBtn").addEventListener("click",async()=>{
     ਸਹੀ ਅਸਲੀ ਸਾਈਜ਼ ਲਈ ਮਾਪ ਚੈੱਕ ਕਰ ਲਵੋ।
   </p>
 </section>
+let outputCanvas = null
+
+const cardType = document.getElementById("cardType");
+const orientation = document.getElementById("orientation");
+const cardWidth = document.getElementById("cardWidth");
+const cardHeight = document.getElementById("cardHeight");
+
+function applyCardPreset() {
+  const presets = {
+    aadhaar: [8.56, 5.40],
+    school: [8.56, 5.40],
+    health: [8.56, 5.40]
+  };
+
+  if (cardType.value !== "custom" &&
+      cardType.value !== "auto") {
+    const size = presets[cardType.value];
+    cardWidth.value = size[0];
+    cardHeight.value = size[1];
+  }
+
+  if (orientation.value === "portrait") {
+    if (+cardWidth.value > +cardHeight.value) {
+      [cardWidth.value, cardHeight.value] =
+        [cardHeight.value, cardWidth.value];
+    }
+  } else if (orientation.value === "landscape") {
+    if (+cardHeight.value > +cardWidth.value) {
+      [cardWidth.value, cardHeight.value] =
+        [cardHeight.value, cardWidth.value];
+    }
+  } else if (orientation.value === "square") {
+    const size = Math.min(+cardWidth.value, +cardHeight.value);
+    cardWidth.value = size;
+    cardHeight.value = size;
+  }
+
+  if (typeof renderCrop === "function") renderCrop();
+}
+
+cardType.addEventListener("change", applyCardPreset);
+orientation.addEventListener("change", applyCardPreset);
+
+cardWidth.addEventListener("change", () => {
+  if (+cardWidth.value > 0) renderCrop();
+});
+
+cardHeight.addEventListener("change", () => {
+  if (+cardHeight.value > 0) renderCrop();
+});
+const page=pdf.addPage([jpg.width,jpg.height]);
+
+const page = pdf.addPage([
+  jpg.width * 72 / 300,
+  jpg.height * 72 / 300
+]);
