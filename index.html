@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html lang="pa">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PrintCard - Card Print</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f6fb;
+      margin: 0;
+      padding: 24px;
+      text-align: center;
+    }
+    .card {
+      max-width: 520px;
+      margin: 30px auto;
+      padding: 24px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 3px 15px #0001;
+    }
+    h1 { color: #174ea6; }
+    input, button {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 13px;
+      margin-top: 14px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    button {
+      background: #174ea6;
+      color: white;
+      border: 0;
+      cursor: pointer;
+    }
+    #message { color: #174ea6; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>PrintCard</h1>
+    <p>ਆਪਣੇ ਕਾਰਡ ਪ੍ਰਿੰਟ ਲਈ ਤਿਆਰ ਕਰੋ</p>
+    <p>PDF ਜਾਂ ਫੋਟੋ ਚੁਣੋ</p>
+    <input id="file" type="file" accept="image/*,.pdf">
+    <button onclick="prepareFile()">ਫ਼ਾਈਲ ਚੁਣੋ</button>
+    <p id="message">PDF ਜਾਂ ਫੋਟੋ ਅੱਪਲੋਡ ਕਰੋ।</p>
+    <p>ਪ੍ਰਿੰਟ ਸ਼ੀਟ: A4</p>
+    <p>ਕੀਮਤ: ₹10</p>
+  </div>
+  <script>
+    function prepareFile() {
+      const f = document.getElementById('file').files[0];
+      const m = document.getElementById('message');
+      if (!f) {
+        m.textContent = 'ਪਹਿਲਾਂ PDF ਜਾਂ ਫੋਟੋ ਚੁਣੋ।';
+        return;
+      }
+      m.textContent = 'ਫ਼ਾਈਲ ਚੁਣੀ ਗਈ: ' + f.name +
+        '. ਇਹ ਸ਼ੁਰੂਆਤੀ ਵਰਜਨ ਹੈ; ਹਾਲੇ PDF ਤਿਆਰ ਜਾਂ ਭੁਗਤਾਨ ਨਹੀਂ ਕਰਦਾ।';
+    }
+  </script>
+</body>
+</html>
