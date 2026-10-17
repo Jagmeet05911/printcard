@@ -4,368 +4,357 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PrintCard - A4 Card Cutter</title>
+<title>PrintCard - ID Card Maker</title>
 
-<link rel="stylesheet"
- href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#f1f5fb;color:#172033;font-family:Arial,sans-serif}
-header{background:#174ea6;color:white;text-align:center;padding:22px 12px}
-header h1{margin:0 0 8px;font-size:29px}
-main{max-width:850px;margin:18px auto;padding:0 12px}
-.panel{background:white;padding:17px;border-radius:14px;margin-bottom:15px;box-shadow:0 3px 14px #0001}
-label{display:block;font-weight:bold;margin:13px 0 7px}
-input,select,button{width:100%;padding:12px;border:1px solid #ccd5e2;border-radius:8px;font-size:16px}
-button{background:#174ea6;color:white;border:0;font-weight:bold;margin-top:12px;cursor:pointer}
-button:disabled{opacity:.5}
-.secondary{background:#e6efff;color:#174ea6}
-.note{font-size:14px;color:#536176;line-height:1.6}
-.preview{width:100%;max-height:60vh;display:block}
-.cropbox{width:100%;max-height:60vh;background:#e9edf4;overflow:hidden}
-.cropbox img{display:block;max-width:100%}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-#status{white-space:pre-wrap;line-height:1.6;margin-top:12px}
-small{color:#58677c}
+body{margin:0;background:#f1f5f9;color:#172033;font-family:Arial,sans-serif}
+header{background:#123c69;color:white;text-align:center;padding:23px 12px}
+header h1{margin:0;font-size:30px}
+header p{margin:8px 0 0}
+main{max-width:850px;margin:20px auto;padding:14px}
+.panel{background:white;border-radius:15px;padding:18px;margin-bottom:16px;box-shadow:0 3px 12px #0000000d}
+h2{font-size:19px;margin-top:0;color:#123c69}
+label{display:block;font-weight:bold;margin:13px 0 6px}
+input,select,button{font:inherit}
+input[type=file],input[type=number],select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:8px;background:white}
+button{border:0;border-radius:9px;padding:12px 15px;cursor:pointer;font-weight:bold}
+.primary{background:#1266d6;color:white;width:100%;margin-top:15px}
+.secondary{background:#e2e8f0;color:#172033;margin-top:10px}
+#previewWrap{max-width:100%;margin-top:14px}
+#sourceImage{display:block;max-width:100%;max-height:520px}
+.note{font-size:13px;color:#64748b;line-height:1.6}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#status{padding:10px;border-radius:8px;background:#eff6ff;color:#123c69;white-space:pre-wrap}
+#paperPreview{width:100%;border:1px solid #cbd5e1;background:white;margin-top:12px}
+footer{text-align:center;padding:20px;color:#64748b;font-size:13px}
+@media(max-width:520px){.row{grid-template-columns:1fr}main{padding:10px}.panel{padding:14px}}
 </style>
 </head>
 <body>
-
 <header>
 <h1>PrintCard</h1>
-<div>PDF ਤੋਂ Wallet Size ID Card ਬਣਾਓ</div>
+<p>ਆਪਣਾ ID Card Crop ਕਰੋ ਤੇ A4 PDF ਬਣਾਓ</p>
+<p>Upload • Crop • Print</p>
 </header>
 
 <main>
 <section class="panel">
-<h2>1. PDF ਜਾਂ ਫੋਟੋ ਅਪਲੋਡ ਕਰੋ</h2>
-<p class="note">A4 PDF ਜਾਂ ਕਾਰਡ ਦੀ ਫੋਟੋ ਚੁਣੋ। ਫਿਰ Preview ਵਿੱਚ ਕਾਰਡ ਦੇ ਕਿਨਾਰੇ ਚੁਣ ਕੇ Crop ਕਰੋ।</p>
-<input type="file" id="file" accept=".pdf,image/*">
+<h2>1. PDF ਜਾਂ ਫੋਟੋ ਅੱਪਲੋਡ ਕਰੋ</h2>
+<label for="fileInput">ਆਪਣੀ PDF / JPG / PNG ਫਾਈਲ ਚੁਣੋ</label>
+<input id="fileInput" type="file" accept=".pdf,application/pdf,image/jpeg,image/png,image/webp">
+<p class="note">ਜੇ PDF ਵਿੱਚ A4 ਪੇਜ ਉੱਤੇ ਕਾਰਡ ਹੈ ਤਾਂ ਪਹਿਲਾਂ ਪੇਜ ਚੁਣੋ, ਫਿਰ ਹੇਠਾਂ ਕਾਰਡ ਨੂੰ Crop ਕਰੋ। ਅਸਲੀ Aadhaar/PAN ਦੀ ਥਾਂ ਪਹਿਲਾਂ ਨਮੂਨਾ ਫਾਈਲ ਨਾਲ ਟੈਸਟ ਕਰੋ।</p>
 
-<label>PDF ਪੰਨਾ</label>
-<select id="page" disabled>
-<option value="1">ਪੰਨਾ 1</option>
-</select>
-<button id="load" class="secondary">ਫਾਈਲ ਖੋਲ੍ਹੋ</button>
+<div id="pdfOptions" hidden>
+<label for="pageSelect">PDF ਪੇਜ ਚੁਣੋ</label>
+<select id="pageSelect"></select>
+<button class="secondary" id="loadPage">ਪੇਜ ਖੋਲ੍ਹੋ</button>
+</div>
 </section>
 
 <section class="panel">
 <h2>2. ਕਾਰਡ Crop ਕਰੋ</h2>
-<p class="note">ਤਸਵੀਰ ਉੱਤੇ ਉਂਗਲ ਜਾਂ ਮਾਊਸ ਨਾਲ ਕਾਰਡ ਦਾ ਹਿੱਸਾ ਚੁਣੋ। ਚੋਣ ਨੂੰ ਖਿੱਚ ਕੇ ਠੀਕ ਕਰੋ।</p>
-<div class="cropbox">
-<img id="source" alt="Crop ਲਈ ਕਾਰਡ ਦੀ ਝਲਕ" hidden>
-<div id="empty" class="note" style="padding:25px">
-ਫਾਈਲ ਖੋਲ੍ਹਣ ਤੋਂ ਬਾਅਦ ਇੱਥੇ Preview ਆਵੇਗੀ।
+<div id="previewWrap">
+<img id="sourceImage" alt="Crop ਕਰਨ ਲਈ ਚੁਣੀ ਫਾਈਲ">
 </div>
-</div>
-<button id="reset" class="secondary">Crop ਮੁੜ ਸੈੱਟ ਕਰੋ</button>
+<p class="note">ਕਾਰਡ ਦੇ ਚਾਰੇ ਪਾਸੇ ਵਾਲੇ Crop ਬਾਕਸ ਨੂੰ ਖਿੱਚ ਕੇ ਸਹੀ ਜਗ੍ਹਾ ਰੱਖੋ। ਫਿਰ “Crop ਪੱਕਾ ਕਰੋ” ਦਬਾਓ।</p>
+<button id="cropButton" class="primary" disabled>Crop ਪੱਕਾ ਕਰੋ</button>
+<div id="croppedResult"></div>
 </section>
 
 <section class="panel">
-<h2>3. ਕਾਰਡ ਦਾ ਸਾਈਜ਼</h2>
-<label>ਕਾਰਡ ਦੀ ਕਿਸਮ</label>
-<select id="preset">
-<option value="3.37,2.125">Wallet ID Card — 3.37 × 2.125 ਇੰਚ</option>
-<option value="3.37,2.125">PAN Card — ਆਮ ID ਆਕਾਰ</option>
-<option value="3.37,2.125">Voter / Health / e-Shram — ਆਮ ID ਆਕਾਰ</option>
-<option value="custom">ਆਪਣਾ ਸਾਈਜ਼</option>
-</select>
-
-<div class="grid">
+<h2>3. ਕਾਰਡ ਦੀ ਸੈਟਿੰਗ</h2>
+<div class="row">
 <div>
-<label>ਚੌੜਾਈ (ਇੰਚ)</label>
-<input type="number" id="width" value="3.37" min="0.5" max="8" step="0.01">
-</div>
-<div>
-<label>ਉਚਾਈ (ਇੰਚ)</label>
-<input type="number" id="height" value="2.125" min="0.5" max="11" step="0.01">
-</div>
-</div>
-
-<label>Orientation</label>
+<label for="orientation">ਕਾਰਡ ਦੀ ਦਿਸ਼ਾ</label>
 <select id="orientation">
-<option value="landscape">Landscape — ਲੰਮਾ</option>
-<option value="portrait">Portrait — ਖੜ੍ਹਾ</option>
+<option value="landscape">Landscape — ਲੇਟਵਾਂ</option>
+<option value="portrait">Portrait — ਖੜ੍ਹਵਾਂ</option>
 </select>
+</div>
+<div>
+<label for="copies">ਕਿੰਨੇ ਕਾਰਡ ਚਾਹੀਦੇ ਹਨ?</label>
+<input id="copies" type="number" min="1" max="30" value="8">
+</div>
+</div>
 
-<label>ਇੱਕ A4 ਪੇਜ ਉੱਤੇ ਕਾਰਡਾਂ ਦੀ ਗਿਣਤੀ</label>
-<select id="copies">
-<option value="auto">ਜਿੰਨੇ ਫਿੱਟ ਹੋ ਸਕਣ</option>
-<option value="1">1 ਕਾਰਡ</option>
-<option value="2">2 ਕਾਰਡ</option>
-<option value="4">4 ਕਾਰਡ</option>
-<option value="6">6 ਕਾਰਡ</option>
-<option value="8">8 ਕਾਰਡ</option>
-</select>
+<div class="row">
+<div>
+<label for="cardWidth">ਕਾਰਡ ਚੌੜਾਈ (ਇੰਚ)</label>
+<input id="cardWidth" type="number" min="1" max="8" step="0.01" value="3.37">
+</div>
+<div>
+<label for="cardHeight">ਕਾਰਡ ਉਚਾਈ (ਇੰਚ)</label>
+<input id="cardHeight" type="number" min="1" max="8" step="0.01" value="2.125">
+</div>
+</div>
 
-<p class="note">ਸਾਈਜ਼ ਮਿਲੀਮੀਟਰ ਵਿੱਚ ਨਹੀਂ, ਇੰਚ ਵਿੱਚ ਭਰਨਾ ਹੈ। PDF ਵਿੱਚ ਮੌਜੂਦਾ ਕਾਰਡ ਦਾ ਸਹੀ ਹਿੱਸਾ ਚੁਣਨਾ ਜ਼ਰੂਰੀ ਹੈ।</p>
-<button id="make">A4 ਪ੍ਰਿੰਟ PDF ਬਣਾਓ</button>
-<div id="status" role="status">ਫਾਈਲ ਚੁਣੋ ਅਤੇ ਖੋਲ੍ਹੋ।</div>
-</section>
-
-<section class="panel">
-<h3>ਪ੍ਰਿੰਟ ਕਰਨ ਤੋਂ ਪਹਿਲਾਂ</h3>
-<p class="note">
-PDF ਖੋਲ੍ਹ ਕੇ Paper Size A4 ਅਤੇ Scale 100% / Actual Size ਚੁਣੋ।
-Fit to Page ਬੰਦ ਰੱਖੋ। ਪਹਿਲਾਂ ਇੱਕ ਟੈਸਟ ਪ੍ਰਿੰਟ ਕਰਕੇ ਮਾਪ ਚੈੱਕ ਕਰੋ।
-</p>
+<p class="note">ਆਮ Wallet ID Card ਲਈ 3.37 × 2.125 ਇੰਚ ਇੱਕ ਸ਼ੁਰੂਆਤੀ ਮਾਪ ਹੈ। ਜੇ ਤੁਹਾਡੇ ਕਾਰਡ ਦਾ ਅਸਲ ਮਾਪ ਵੱਖਰਾ ਹੈ ਤਾਂ ਉਹ ਭਰੋ। Portrait ਚੁਣਨ ’ਤੇ ਮਾਪ ਆਪਸ ਵਿੱਚ ਬਦਲ ਜਾਣਗੇ।</p>
+<button id="makePdf" class="primary">A4 Print PDF ਬਣਾਓ</button>
+<button id="previewBtn" class="secondary" style="width:100%">A4 Preview ਵੇਖੋ</button>
+<div id="status" style="margin-top:14px">ਫਾਈਲ ਚੁਣ ਕੇ ਸ਼ੁਰੂ ਕਰੋ।</div>
+<canvas id="paperPreview" hidden></canvas>
 </section>
 </main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-<script type="module">
-import * as pdfjsLib from
-"https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs";
+<footer>PrintCard • ਤੁਹਾਡੀਆਂ ਫਾਈਲਾਂ ਇਸ ਬ੍ਰਾਊਜ਼ਰ ਵਿੱਚ ਪ੍ਰੋਸੈਸ ਕੀਤੀਆਂ ਜਾਂਦੀਆਂ ਹਨ। ਬਾਹਰੀ ਲਾਇਬ੍ਰੇਰੀਆਂ ਲੋਡ ਕਰਨ ਲਈ ਇੰਟਰਨੈੱਟ ਲੋੜੀਂਦਾ ਹੈ।</footer>
 
+<script>
 pdfjsLib.GlobalWorkerOptions.workerSrc =
-"https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
+'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-const $ = id => document.getElementById(id);
+const fileInput = document.getElementById('fileInput');
+const sourceImage = document.getElementById('sourceImage');
+const cropButton = document.getElementById('cropButton');
+const statusBox = document.getElementById('status');
+const pdfOptions = document.getElementById('pdfOptions');
+const pageSelect = document.getElementById('pageSelect');
+const croppedResult = document.getElementById('croppedResult');
+const paperPreview = document.getElementById('paperPreview');
+
+let currentPdf = null;
 let cropper = null;
-let pdfDocument = null;
-let sourceUrl = null;
+let croppedCanvas = null;
+let selectedFile = null;
+let pdfPageNumber = 1;
 
-function status(msg){ $("status").textContent = msg; }
-
-function disposeCropper(){
-  if(cropper){cropper.destroy();cropper=null;}
+function status(message) {
+  statusBox.textContent = message;
 }
 
-$("preset").addEventListener("change",()=>{
-  if($("preset").value==="custom") return;
-  const [w,h]=$("preset").value.split(",").map(Number);
-  $("width").value=w;
-  $("height").value=h;
-  updateAspect();
-});
-
-$("orientation").addEventListener("change",()=>{
-  const w=Number($("width").value);
-  const h=Number($("height").value);
-  if(w>0 && h>0){
-    if($("orientation").value==="portrait" && w>h){
-      $("width").value=h;
-      $("height").value=w;
-    } else if($("orientation").value==="landscape" && h>w){
-      $("width").value=h;
-      $("height").value=w;
-    }
+function destroyCropper() {
+  if (cropper) {
+    cropper.destroy();
+    cropper = null;
   }
-  updateAspect();
-});
-
-function updateAspect(){
-  if(!cropper) return;
-  const w=Number($("width").value);
-  const h=Number($("height").value);
-  if(w>0 && h>0) cropper.setAspectRatio(w/h);
 }
 
-$("width").addEventListener("change",updateAspect);
-$("height").addEventListener("change",updateAspect);
+function showImage(dataUrl) {
+  destroyCropper();
+  croppedCanvas = null;
+  croppedResult.innerHTML = '';
+  sourceImage.onload = () => {
+    cropper = new Cropper(sourceImage, {
+      viewMode: 1,
+      dragMode: 'crop',
+      autoCropArea: 0.8,
+      responsive: true,
+      background: false,
+      movable: true,
+      zoomable: true,
+      rotatable: false
+    });
+    cropButton.disabled = false;
+    status('ਕਾਰਡ ਦੇ ਆਲੇ-ਦੁਆਲੇ Crop ਬਾਕਸ ਠੀਕ ਕਰੋ।');
+  };
+  sourceImage.src = dataUrl;
+}
 
-$("file").addEventListener("change",()=>{
-  $("page").disabled=true;
-  $("page").innerHTML='<option value="1">ਪੰਨਾ 1</option>';
-  pdfDocument=null;
-  disposeCropper();
-  $("source").hidden=true;
-  $("empty").hidden=false;
-  status("ਫਾਈਲ ਚੁਣ ਲਈ ਗਈ ਹੈ। ਹੁਣ ਫਾਈਲ ਖੋਲ੍ਹੋ।");
-});
+fileInput.addEventListener('change', async () => {
+  const file = fileInput.files[0];
+  if (!file) return;
 
-$("load").addEventListener("click",async()=>{
-  const file=$("file").files[0];
-  if(!file){status("ਪਹਿਲਾਂ PDF ਜਾਂ ਫੋਟੋ ਚੁਣੋ।");return;}
+  selectedFile = file;
+  destroyCropper();
+  croppedCanvas = null;
+  cropButton.disabled = true;
+  pdfOptions.hidden = true;
+  currentPdf = null;
+  status('ਫਾਈਲ ਖੋਲ੍ਹੀ ਜਾ ਰਹੀ ਹੈ...');
 
-  $("load").disabled=true;
-  status("ਫਾਈਲ ਖੁੱਲ੍ਹ ਰਹੀ ਹੈ...");
+  try {
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      const bytes = await file.arrayBuffer();
+      currentPdf = await pdfjsLib.getDocument({data: bytes}).promise;
+      pageSelect.innerHTML = '';
 
-  try{
-    let blob;
-
-    if(file.type==="application/pdf" || /\.pdf$/i.test(file.name)){
-      const bytes=new Uint8Array(await file.arrayBuffer());
-      pdfDocument=await pdfjsLib.getDocument({data:bytes}).promise;
-
-      $("page").disabled=false;
-      $("page").innerHTML="";
-      for(let n=1;n<=pdfDocument.numPages;n++){
-        const op=document.createElement("option");
-        op.value=n;
-        op.textContent="ਪੰਨਾ "+n;
-        $("page").appendChild(op);
+      for (let i = 1; i <= currentPdf.numPages; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = 'ਪੇਜ ' + i;
+        pageSelect.appendChild(option);
       }
-      blob=await renderPage(Number($("page").value));
-    }else if(file.type.startsWith("image/")){
-      pdfDocument=null;
-      $("page").disabled=true;
-      blob=file;
-    }else{
-      throw new Error("ਇਹ ਫਾਈਲ ਕਿਸਮ ਸਹਾਇਕ ਨਹੀਂ ਹੈ।");
-    }
 
-    await showImage(blob);
-    status("ਫਾਈਲ ਤਿਆਰ ਹੈ। ਹੁਣ ਕਾਰਡ ਦਾ ਹਿੱਸਾ Crop ਕਰੋ।");
-  }catch(e){
-    status("ਸਮੱਸਿਆ: "+(e.message||"ਫਾਈਲ ਨਹੀਂ ਖੁੱਲ੍ਹੀ।"));
-  }finally{
-    $("load").disabled=false;
+      pdfOptions.hidden = false;
+      await renderPdfPage(1);
+    } else if (file.type.startsWith('image/')) {
+      const url = URL.createObjectURL(file);
+      showImage(url);
+    } else {
+      status('ਇਹ ਫਾਈਲ ਨਹੀਂ ਖੁੱਲ੍ਹ ਸਕਦੀ। PDF, JPG ਜਾਂ PNG ਚੁਣੋ।');
+    }
+  } catch (error) {
+    console.error(error);
+    status('ਫਾਈਲ ਖੋਲ੍ਹਣ ਵਿੱਚ ਦਿੱਕਤ ਆਈ। ਹੋਰ PDF ਜਾਂ ਫੋਟੋ ਨਾਲ ਕੋਸ਼ਿਸ਼ ਕਰੋ।');
   }
 });
 
-async function renderPage(n){
-  const page=await pdfDocument.getPage(n);
-  const viewport=page.getViewport({scale:2});
-  const canvas=document.createElement("canvas");
-  canvas.width=Math.ceil(viewport.width);
-  canvas.height=Math.ceil(viewport.height);
+async function renderPdfPage(pageNumber) {
+  if (!currentPdf) return;
+
+  pdfPageNumber = Number(pageNumber);
+  status('PDF ਪੇਜ ਤਿਆਰ ਹੋ ਰਿਹਾ ਹੈ...');
+  const page = await currentPdf.getPage(pdfPageNumber);
+  const viewport = page.getViewport({scale: 2});
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.ceil(viewport.width);
+  canvas.height = Math.ceil(viewport.height);
+
   await page.render({
-    canvasContext:canvas.getContext("2d"),
+    canvasContext: canvas.getContext('2d'),
     viewport
   }).promise;
 
-  const blob=await new Promise(resolve=>
-    canvas.toBlob(resolve,"image/png"));
-  canvas.width=0;
-  canvas.height=0;
-  if(!blob) throw new Error("PDF ਪੰਨੇ ਦੀ ਤਸਵੀਰ ਨਹੀਂ ਬਣੀ।");
-  return blob;
+  showImage(canvas.toDataURL('image/png'));
 }
 
-$("page").addEventListener("change",async()=>{
-  if(!pdfDocument) return;
-  try{
-    status("ਪੰਨਾ ਬਦਲ ਰਿਹਾ ਹੈ...");
-    await showImage(await renderPage(Number($("page").value)));
-    status("ਪੰਨਾ ਤਿਆਰ ਹੈ। ਕਾਰਡ Crop ਕਰੋ।");
-  }catch(e){status("ਸਮੱਸਿਆ: "+e.message);}
+document.getElementById('loadPage').addEventListener('click', async () => {
+  try {
+    await renderPdfPage(pageSelect.value);
+  } catch (error) {
+    console.error(error);
+    status('ਪੇਜ ਲੋਡ ਨਹੀਂ ਹੋਇਆ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।');
+  }
 });
 
-async function showImage(blob){
-  disposeCropper();
-  if(sourceUrl) URL.revokeObjectURL(sourceUrl);
-  sourceUrl=URL.createObjectURL(blob);
-  const img=$("source");
-  img.onload=()=>{
-    $("empty").hidden=true;
-    img.hidden=false;
-    cropper=new Cropper(img,{
-      viewMode:1,
-      dragMode:"crop",
-      autoCropArea:0.8,
-      responsive:true,
-      background:false,
-      movable:true,
-      zoomable:true,
-      rotatable:false,
-      scalable:false,
-      aspectRatio:Number($("width").value)/Number($("height").value)
-    });
-  };
-  img.src=sourceUrl;
-}
-
-$("reset").addEventListener("click",()=>{
-  if(cropper) cropper.reset();
-});
-
-$("make").addEventListener("click",async()=>{
-  if(!cropper){
-    status("ਪਹਿਲਾਂ ਫਾਈਲ ਖੋਲ੍ਹੋ ਅਤੇ ਕਾਰਡ Crop ਕਰੋ।");
+cropButton.addEventListener('click', () => {
+  if (!cropper) {
+    status('ਪਹਿਲਾਂ PDF ਜਾਂ ਫੋਟੋ ਚੁਣੋ।');
     return;
   }
 
-  const w=Number($("width").value);
-  const h=Number($("height").value);
-  if(!Number.isFinite(w)||!Number.isFinite(h)||
-     w<0.5||h<0.5||w>8||h>11){
-    status("ਕਾਰਡ ਦੀ ਚੌੜਾਈ ਅਤੇ ਉਚਾਈ ਠੀਕ ਭਰੋ।");
+  croppedCanvas = cropper.getCroppedCanvas({
+    maxWidth: 2400,
+    maxHeight: 1600,
+    imageSmoothingEnabled: true,
+    imageSmoothingQuality: 'high'
+  });
+
+  if (!croppedCanvas) {
+    status('Crop ਨਹੀਂ ਹੋਇਆ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।');
     return;
   }
 
-  $("make").disabled=true;
-  try{
-    status("ਕਾਰਡ Crop ਹੋ ਰਿਹਾ ਹੈ...");
-    const canvas=cropper.getCroppedCanvas({
-      width:Math.round(w*300),
-      height:Math.round(h*300),
-      imageSmoothingEnabled:true,
-      imageSmoothingQuality:"high",
-      fillColor:"#ffffff"
-    });
-    if(!canvas) throw new Error("Crop ਨਹੀਂ ਹੋ ਸਕਿਆ।");
+  croppedResult.innerHTML = '';
+  const resultImage = document.createElement('img');
+  resultImage.src = croppedCanvas.toDataURL('image/png');
+  resultImage.style.cssText = 'max-width:220px;width:100%;margin-top:12px;border:1px solid #ddd';
+  croppedResult.appendChild(resultImage);
+  status('Crop ਤਿਆਰ ਹੈ। ਹੁਣ ਕਾਰਡ ਦੀ ਸੈਟਿੰਗ ਚੁਣੋ।');
+});
 
-    const png=await new Promise(resolve=>
-      canvas.toBlob(resolve,"image/png"));
-    if(!png) throw new Error("ਕਾਰਡ ਦੀ ਤਸਵੀਰ ਨਹੀਂ ਬਣੀ।");
+function getCardSize() {
+  let w = Number(document.getElementById('cardWidth').value);
+  let h = Number(document.getElementById('cardHeight').value);
+  const orientation = document.getElementById('orientation').value;
 
-    const imageBytes=new Uint8Array(await png.arrayBuffer());
-    const {PDFDocument}=PDFLib;
-    const out=await PDFDocument.create();
-    const img=await out.embedPng(imageBytes);
+  if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
+    throw new Error('ਕਾਰਡ ਦਾ ਮਾਪ ਸਹੀ ਭਰੋ।');
+  }
 
-    const pageW=595.28,pageH=841.89;
-    const cardW=w*72,cardH=h*72;
-    const margin=18,gap=10;
+  if (orientation === 'portrait' && w > h) [w, h] = [h, w];
+  if (orientation === 'landscape' && h > w) [w, h] = [h, w];
 
-    const cols=Math.floor((pageW-2*margin+gap)/(cardW+gap));
-    const rows=Math.floor((pageH-2*margin+gap)/(cardH+gap));
-    if(cols<1||rows<1)
-      throw new Error("ਇਹ ਸਾਈਜ਼ A4 ਉੱਤੇ ਫਿੱਟ ਨਹੀਂ ਹੁੰਦਾ।");
+  return {w: w * 72, h: h * 72};
+}
 
-    const mode=$("copies").value;
-    const maxCards=mode==="auto"?cols*rows:
-      Math.min(Number(mode),cols*rows);
+async function makePdf(showPreview) {
+  if (!croppedCanvas) {
+    status('ਪਹਿਲਾਂ ਫਾਈਲ ਅੱਪਲੋਡ ਕਰੋ ਅਤੇ Crop ਪੱਕਾ ਕਰੋ।');
+    return;
+  }
 
-    const page=out.addPage([pageW,pageH]);
-    const actualRows=Math.ceil(maxCards/cols);
-    const totalW=cols*cardW+(cols-1)*gap;
-    const totalH=actualRows*cardH+(actualRows-1)*gap;
-    const startX=(pageW-totalW)/2;
-    const startY=(pageH+totalH)/2;
-
-    for(let i=0;i<maxCards;i++){
-      const col=i%cols,row=Math.floor(i/cols);
-      const x=startX+col*(cardW+gap);
-      const y=startY-cardH-row*(cardH+gap);
-
-      page.drawImage(img,{
-        x,y,width:cardW,height:cardH
-      });
-
-      // ਕਟਿੰਗ ਲਈ ਚਾਰ ਕੋਨਿਆਂ 'ਤੇ ਛੋਟੇ ਨਿਸ਼ਾਨ
-      const mark=5;
-      const line={color:PDFLib.rgb(0.25,0.25,0.25),thickness:0.5};
-      page.drawLine({start:{x:x-mark,y},end:{x:x-1,y},...line});
-      page.drawLine({start:{x:x,y:y-mark},end:{x,y:y-1},...line});
-      page.drawLine({start:{x:x+cardW+1,y},end:{x:x+cardW+mark,y},...line});
-      page.drawLine({start:{x:x+cardW,y:y-mark},end:{x:x+cardW,y:y-1},...line});
-      page.drawLine({start:{x:x-mark,y:y+cardH},end:{x:x-1,y:y+cardH},...line});
-      page.drawLine({start:{x:x,y:y+cardH+1},end:{x:x,y:y+cardH+mark},...line});
-      page.drawLine({start:{x:x+cardW+1,y:y+cardH},end:{x:x+cardW+mark,y:y+cardH},...line});
-      page.drawLine({start:{x:x+cardW,y:y+cardH+1},end:{x:x+cardW,y:y+cardH+mark},...line});
+  try {
+    const copies = Math.floor(Number(document.getElementById('copies').value));
+    if (!Number.isFinite(copies) || copies < 1 || copies > 30) {
+      throw new Error('ਕਾਰਡਾਂ ਦੀ ਗਿਣਤੀ 1 ਤੋਂ 30 ਵਿਚਕਾਰ ਰੱਖੋ।');
     }
 
-    const bytes=await out.save();
-    const url=URL.createObjectURL(
-      new Blob([bytes],{type:"application/pdf"}));
-    const a=document.createElement("a");
-    a.href=url;
-    a.download="PrintCard-A4.pdf";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),60000);
-    status("PDF ਤਿਆਰ ਹੈ! ਪ੍ਰਿੰਟ ਵਿੱਚ A4 ਅਤੇ Actual Size / 100% ਚੁਣੋ।");
-  }catch(e){
-    status("ਸਮੱਸਿਆ: "+(e.message||"PDF ਨਹੀਂ ਬਣੀ।"));
-  }finally{
-    $("make").disabled=false;
+    const {w: cardW, h: cardH} = getCardSize();
+    const a4W = 595.28;
+    const a4H = 841.89;
+    const margin = 18;
+    const gap = 8;
+    const cols = Math.max(1, Math.floor((a4W - 2 * margin + gap) / (cardW + gap)));
+    const rows = Math.max(1, Math.floor((a4H - 2 * margin + gap) / (cardH + gap)));
+    const perPage = cols * rows;
+    const pages = Math.ceil(copies / perPage);
+
+    const {PDFDocument, rgb} = PDFLib;
+    const pdfDoc = await PDFDocument.create();
+    const pngBytes = await new Promise(resolve =>
+      croppedCanvas.toBlob(blob => {
+        if (!blob) throw new Error('Crop ਕੀਤੀ ਤਸਵੀਰ ਤਿਆਰ ਨਹੀਂ ਹੋਈ।');
+        blob.arrayBuffer().then(resolve);
+      }, 'image/png')
+    );
+    const cardImage = await pdfDoc.embedPng(pngBytes);
+
+    let done = 0;
+
+    for (let p = 0; p < pages; p++) {
+      const page = pdfDoc.addPage([a4W, a4H]);
+
+      for (let r = 0; r < rows && done < copies; r++) {
+        for (let c = 0; c < cols && done < copies; c++) {
+          const x = margin + c * (cardW + gap);
+          const yTop = margin + r * (cardH + gap);
+          const y = a4H - yTop - cardH;
+
+          page.drawImage(cardImage, {
+            x, y, width: cardW, height: cardH
+          });
+
+          const mark = 4;
+          const line = 0.5;
+          const color = rgb(0.25, 0.25, 0.25);
+
+          page.drawLine({start:{x:x-mark,y},end:{x:x+mark,y},thickness:line,color});
+          page.drawLine({start:{x,y:y-mark},end:{x,y:y+mark},thickness:line,color});
+          page.drawLine({start:{x:x+cardW-mark,y},end:{x:x+cardW+mark,y},thickness:line,color});
+          page.drawLine({start:{x:x+cardW,y:y-mark},end:{x:x+cardW,y:y+mark},thickness:line,color});
+          page.drawLine({start:{x:x-mark,y:y+cardH},end:{x:x+mark,y:y+cardH},thickness:line,color});
+          page.drawLine({start:{x,y:y+cardH-mark},end:{x,y:y+cardH+mark},thickness:line,color});
+          page.drawLine({start:{x:x+cardW-mark,y:y+cardH},end:{x:x+cardW+mark,y:y+cardH},thickness:line,color});
+          page.drawLine({start:{x:x+cardW,y:y+cardH-mark},end:{x:x+cardW,y:y+cardH+mark},thickness:line,color});
+
+          done++;
+        }
+      }
+    }
+
+    const pdfBytes = await pdfDoc.save();
+
+    if (showPreview) {
+      const blob = new Blob([pdfBytes], {type:'application/pdf'});
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      status('A4 PDF Preview ਖੋਲ੍ਹਣ ਦੀ ਕੋਸ਼ਿਸ਼ ਕੀਤੀ। ਜੇ ਨਾ ਖੁੱਲ੍ਹੇ ਤਾਂ “A4 Print PDF ਬਣਾਓ” ਦਬਾਓ।');
+    } else {
+      const blob = new Blob([pdfBytes], {type:'application/pdf'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'PrintCard-A4.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+      status('PDF ਬਣ ਗਈ। ਪ੍ਰਿੰਟ ਕਰਦੇ ਸਮੇਂ Actual Size ਜਾਂ 100% ਚੁਣੋ, Fit to Page ਨਹੀਂ।');
+    }
+  } catch (error) {
+    console.error(error);
+    status(error.message || 'PDF ਬਣਾਉਣ ਵਿੱਚ ਗਲਤੀ ਆਈ।');
   }
-});
+}
+
+document.getElementById('makePdf').addEventListener('click', () => makePdf(false));
+document.getElementById('previewBtn').addEventListener('click', () => makePdf(true));
 </script>
 </body>
 </html>
