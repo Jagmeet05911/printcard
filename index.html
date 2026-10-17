@@ -359,3 +359,40 @@ document.getElementById("pdfBtn").addEventListener("click",async()=>{
 </script>
 </body>
 </html>
+
+<section class="panel">
+  <h3>ਕਾਰਡ ਦਾ ਸਾਈਜ਼</h3>
+
+  <label for="cardType">ਕਾਰਡ ਦੀ ਕਿਸਮ</label>
+  <select id="cardType" style="width:100%;padding:10px;margin:8px 0">
+    <option value="auto">Auto Detect</option>
+    <option value="aadhaar">Aadhaar Card</option>
+    <option value="school">School / College ID</option>
+    <option value="health">Health Card</option>
+    <option value="custom">Custom Size</option>
+  </select>
+
+  <label for="orientation">ਕਾਰਡ ਦੀ ਦਿਸ਼ਾ</label>
+  <select id="orientation" style="width:100%;padding:10px;margin:8px 0">
+    <option value="auto">Auto Detect</option>
+    <option value="portrait">Portrait — ਲੰਬਾ</option>
+    <option value="landscape">Landscape — ਚੌੜਾ</option>
+    <option value="square">Square — ਵਰਗਾਕਾਰ</option>
+  </select>
+
+  <p>ਸਾਈਜ਼ (cm ਵਿੱਚ)</p>
+  <div style="display:flex;gap:10px">
+    <label>ਚੌੜਾਈ (cm)
+      <input id="cardWidth" type="number" value="8.56"
+        min="1" max="30" step="0.01" style="width:100%">
+    </label>
+    <label>ਉਚਾਈ (cm)
+      <input id="cardHeight" type="number" value="5.40"
+        min="1" max="30" step="0.01" style="width:100%">
+    </label>
+  </div>
+  <p class="note">
+    Auto Detect ਕਾਰਡ ਦੀਆਂ ਹੱਦਾਂ ਪਛਾਣਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੇਗਾ।
+    ਸਹੀ ਅਸਲੀ ਸਾਈਜ਼ ਲਈ ਮਾਪ ਚੈੱਕ ਕਰ ਲਵੋ।
+  </p>
+</section>
