@@ -1,490 +1,103 @@
 
-<!DOCTYPE html>
-<html lang="pa">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PrintCard — Smart Card Maker</title>
-<style>
-:root{--blue:#2457e6;--navy:#142344;--bg:#f4f7fc;--line:#e1e8f3;--muted:#64748b}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--navy);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-header{background:linear-gradient(125deg,#10244a,#285be8);color:white;padding:27px 18px 34px}
-.top{max-width:1100px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px}
-.logo{font-size:25px;font-weight:850;letter-spacing:-1px}
-.logo span{color:#a9c5ff}
-.tag{font-size:12px;background:#ffffff20;border:1px solid #ffffff30;padding:6px 10px;border-radius:99px}
-.hero{max-width:1100px;margin:25px auto 0}
-.hero h1{font-size:clamp(27px,5vw,43px);line-height:1.12;letter-spacing:-1.2px;margin:0 0 12px}
-.hero p{margin:0;color:#e0e9ff;max-width:650px}
-main{max-width:1100px;margin:-13px auto 35px;padding:0 14px}
-.card{background:white;border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:0 5px 20px #18376808}
-h2{font-size:18px;margin:0 0 14px;letter-spacing:-.3px}
-h3{font-size:14px;margin:0 0 8px}
-.muted,.hint{font-size:12px;color:var(--muted)}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-label{display:block;font-weight:650;font-size:13px;margin-bottom:6px}
-input,select,button{font:inherit}
-input[type=file],input[type=number],select,input[type=text]{width:100%;padding:11px;border:1px solid #d7e0ee;border-radius:10px;background:white;color:var(--navy);min-width:0}
-input:focus,select:focus{outline:2px solid #9ab7ff;border-color:var(--blue)}
-.upload{display:block;border:1.5px dashed #aabce0;background:#f8faff;padding:16px;border-radius:13px}
-.upload strong{display:block;margin-bottom:5px}
-.btn{border:0;border-radius:11px;padding:12px 15px;font-weight:750;cursor:pointer;transition:.15s}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.primary{background:var(--blue);color:white}
-.secondary{background:#edf2ff;color:#2146b8}
-.dark{background:var(--navy);color:white}
-.outline{border:1px solid var(--line);background:white;color:var(--navy)}
-.btnrow{display:flex;gap:9px;flex-wrap:wrap}
-.btnrow .btn{flex:1}
-.tabs{display:flex;gap:8px;margin-bottom:14px}
-.tab{flex:1;border:1px solid var(--line);border-radius:10px;padding:11px;background:#f7f9fd;font-weight:750;cursor:pointer}
-.tab.active{background:#eaf0ff;color:#1748d4;border-color:#9db7ff}
-.preview{position:relative;width:100%;aspect-ratio:5/3;background:#edf2fa;border-radius:13px;overflow:hidden;touch-action:none}
-#canvas{width:100%;height:100%;display:block}
-#cropBox{position:absolute;border:2px solid #2474ff;box-shadow:0 0 0 9999px #10244a50;cursor:move;touch-action:none}
-.handle{position:absolute;width:17px;height:17px;background:white;border:3px solid #2474ff;border-radius:50%;touch-action:none}
-.tl{top:-9px;left:-9px;cursor:nwse-resize}.tr{top:-9px;right:-9px;cursor:nesw-resize}
-.bl{bottom:-9px;left:-9px;cursor:nesw-resize}.br{bottom:-9px;right:-9px;cursor:nwse-resize}
-.status{padding:11px 13px;border-radius:10px;background:#eff5ff;color:#234a9a;font-size:13px;margin-top:12px}
-.warn{background:#fff7e8;color:#87540b}
-.hidden{display:none!important}
-.check{display:flex;align-items:center;gap:8px;font-weight:500;margin:9px 0}
-.check input{width:17px;height:17px}
-.footer{text-align:center;color:#7a879c;font-size:12px;padding:8px 15px 28px}
-.badge{display:inline-block;background:#eaf1ff;color:#2454d9;border-radius:7px;padding:3px 8px;font-size:11px;font-weight:800}
-@media(max-width:650px){.grid,.three{grid-template-columns:1fr 1fr}.card{padding:15px}.top{align-items:flex-start}.hero{margin-top:23px}.btnrow .btn{min-width:110px}.logo{font-size:22px}}
-@media(max-width:390px){.grid,.three{grid-template-columns:1fr}.tag{font-size:10px}}
-</style>
-</head>
-<body>
-<header>
-  <div class="top">
-    <div class="logo">Print<span>Card.</span></div>
-    <div class="tag">SMART CARD MAKER</div>
-  </div>
-  <div class="hero">
-    <h1>ਫਾਈਲ ਪਾਓ। ਕਾਰਡ ਤਿਆਰ ਕਰੋ।</h1>
-    <p>Auto Crop, Auto Size, Front & Back ਅਤੇ JPG/PDF Export — ਸੌਖੇ ਤਰੀਕੇ ਨਾਲ।</p>
-  </div>
-</header>
+function makeOutput(s, p) {
+  const dpi = 300;
 
-<main>
-  <section class="card">
-    <h2>01 · ਆਪਣੀ ਫਾਈਲ ਚੁਣੋ</h2>
-    <div class="grid">
-      <div>
-        <label>Front / ਅੱਗੇ ਵਾਲਾ ਪਾਸਾ</label>
-        <label class="upload">
-          <strong>＋ Front ਫਾਈਲ ਚੁਣੋ</strong>
-          <span class="muted">JPG, PNG ਜਾਂ PDF</span>
-          <input id="frontFile" type="file" accept="image/*,.pdf,application/pdf">
-        </label>
-        <div id="frontName" class="hint">ਹਾਲੇ ਕੋਈ ਫਾਈਲ ਨਹੀਂ</div>
-      </div>
-      <div>
-        <label>Back / ਪਿੱਛੇ ਵਾਲਾ ਪਾਸਾ (ਚੋਣਵਾਂ)</label>
-        <label class="upload">
-          <strong>＋ Back ਫਾਈਲ ਚੁਣੋ</strong>
-          <span class="muted">JPG, PNG ਜਾਂ PDF</span>
-          <input id="backFile" type="file" accept="image/*,.pdf,application/pdf">
-        </label>
-        <div id="backName" class="hint">ਹਾਲੇ ਕੋਈ ਫਾਈਲ ਨਹੀਂ</div>
-      </div>
-    </div>
-    <div id="loadStatus" class="status">ਪਹਿਲਾਂ Front ਫਾਈਲ ਚੁਣੋ।</div>
-    <p class="hint">PDF ਦੇ ਪਹਿਲੇ ਪੰਨੇ ਦੀ ਵਰਤੋਂ ਹੋਵੇਗੀ। ਜੇ PDF ਲੌਕ ਹੈ ਤਾਂ ਪਾਸਵਰਡ ਪੁੱਛਿਆ ਜਾਵੇਗਾ। ਐਪ ਤੁਹਾਡਾ PDF ਪਾਸਵਰਡ ਸੇਵ ਨਹੀਂ ਕਰਦੀ।</p>
-  </section>
+  let mmW = p.w;
+  let mmH = p.h;
 
-  <section class="card">
-    <h2>02 · Auto Crop ਅਤੇ Preview</h2>
-    <div class="tabs">
-      <button class="tab active" id="frontTab">Front</button>
-      <button class="tab" id="backTab">Back</button>
-    </div>
-    <div class="preview" id="stage">
-      <canvas id="canvas" width="900" height="540"></canvas>
-      <div id="cropBox" class="hidden">
-        <i class="handle tl" data-handle="tl"></i>
-        <i class="handle tr" data-handle="tr"></i>
-        <i class="handle bl" data-handle="bl"></i>
-        <i class="handle br" data-handle="br"></i>
-      </div>
-    </div>
-    <div class="btnrow" style="margin-top:13px">
-      <button class="btn primary" id="autoCrop">✦ Auto Crop</button>
-      <button class="btn secondary" id="fullCrop">ਪੂਰੀ ਫਾਈਲ</button>
-      <button class="btn outline" id="rotate">↻ Rotate</button>
-      <button class="btn outline" id="mirror">⇄ Mirror</button>
-    </div>
-    <p class="hint">ਨੀਲੇ ਬਾਕਸ ਨੂੰ ਖਿੱਚ ਕੇ ਹਿਲਾਓ। ਚਾਰ ਕੋਨਿਆਂ ਨੂੰ ਖਿੱਚ ਕੇ crop ਦਾ ਸਾਈਜ਼ ਬਦਲੋ। Front ਅਤੇ Back ਦਾ crop ਵੱਖ-ਵੱਖ ਸੈੱਟ ਹੋ ਸਕਦਾ ਹੈ।</p>
-    <div id="cropStatus" class="status">ਫਾਈਲ ਲੋਡ ਹੋਣ ’ਤੇ Auto Crop ਦਬਾਓ।</div>
-  </section>
+  const orientation = $('orientation').value;
 
-  <section class="card">
-    <h2>03 · Auto Size ਅਤੇ ਕਾਰਡ ਸੈਟਿੰਗਾਂ</h2>
-    <div class="grid">
-      <div>
-        <label>ਕਾਰਡ ਦੀ ਕਿਸਮ</label>
-        <select id="cardType">
-          <option value="auto">Auto Detect</option>
-          <option value="id">Aadhaar / ਆਮ ID ਕਾਰਡ</option>
-          <option value="school">School / College ID</option>
-          <option value="health">Health Card</option>
-          <option value="custom">Custom Size</option>
-        </select>
-      </div>
-      <div>
-        <label>Orientation</label>
-        <select id="orientation">
-          <option value="auto">Auto</option>
-          <option value="landscape">Landscape</option>
-          <option value="portrait">Portrait</option>
-          <option value="square">Square</option>
-        </select>
-      </div>
-    </div>
-    <div class="three" style="margin-top:14px">
-      <div>
-        <label>ਮਾਪ ਦੀ ਇਕਾਈ</label>
-        <select id="unit">
-          <option value="mm">Millimetre (mm)</option>
-          <option value="cm">Centimetre (cm)</option>
-          <option value="percent">Percentage (%)</option>
-        </select>
-      </div>
-      <div>
-        <label id="widthLabel">ਚੌੜਾਈ (mm)</label>
-        <input id="width" type="number" min="1" max="1000" step="0.1" value="85.6">
-      </div>
-      <div>
-        <label id="heightLabel">ਉਚਾਈ (mm)</label>
-        <input id="height" type="number" min="1" max="1000" step="0.1" value="54">
-      </div>
-    </div>
-    <div class="btnrow" style="margin-top:12px">
-      <button class="btn secondary" id="autoSize">✦ Auto Size</button>
-      <button class="btn outline" id="standardSize">ਆਮ ID: 85.6 × 54 mm</button>
-    </div>
-    <div class="grid" style="margin-top:15px">
-      <div>
-        <label>Border (mm)</label>
-        <input id="border" type="number" min="0" max="10" step="0.1" value="0">
-      </div>
-      <div>
-        <label>Border ਦਾ ਰੰਗ</label>
-        <input id="borderColor" type="color" value="#202020" style="height:43px;padding:4px">
-      </div>
-    </div>
-    <div class="status warn" id="sizeNote">ਆਮ ID ਸਾਈਜ਼: 85.6 × 54 mm। Auto Size ਸਾਈਜ਼ ਦਾ ਸੁਝਾਅ ਦੇਵੇਗਾ; ਅਸਲ ਮਾਪ ਪ੍ਰਿੰਟ ਵੇਲੇ PDF ਦੀ ਸੈਟਿੰਗ ਨਾਲ ਵੀ ਪ੍ਰਭਾਵਿਤ ਹੋ ਸਕਦੇ ਹਨ।</div>
-  </section>
-
-  <section class="card">
-    <h2>04 · Export ਆਪਣੀ ਮਰਜ਼ੀ ਨਾਲ</h2>
-    <label>ਫਾਈਲ ਬਣਾਉਣ ਦਾ ਤਰੀਕਾ</label>
-    <select id="layout">
-      <option value="separate">Front ਅਤੇ Back ਵੱਖ-ਵੱਖ ਫਾਈਲਾਂ</option>
-      <option value="combined">ਦੋਵੇਂ ਪਾਸੇ ਇੱਕ PDF ਵਿੱਚ (2 ਪੰਨੇ)</option>
-    </select>
-    <p class="hint">Combined 2-page ਵਿਕਲਪ PDF ਲਈ ਹੈ। JPG ਚੁਣਨ ’ਤੇ Front ਅਤੇ Back ਦੀਆਂ ਵੱਖਰੀਆਂ JPG ਫਾਈਲਾਂ ਬਣਨਗੀਆਂ।</p>
-    <div class="btnrow">
-      <button class="btn primary" id="exportJpg">↓ Image (JPG)</button>
-      <button class="btn dark" id="exportPdf">↓ PDF</button>
-    </div>
-    <div id="exportStatus" class="status">Export ਕਰਨ ਲਈ ਘੱਟੋ-ਘੱਟ Front ਫਾਈਲ ਲੋਡ ਕਰੋ।</div>
-  </section>
-  <div class="footer">PrintCard · ਤੁਹਾਡੀਆਂ ਫਾਈਲਾਂ ਇਸ ਬ੍ਰਾਊਜ਼ਰ ਵਿੱਚ ਪ੍ਰੋਸੈਸ ਹੁੰਦੀਆਂ ਹਨ। PDF ਲਾਇਬ੍ਰੇਰੀਆਂ ਇੰਟਰਨੈੱਟ ਤੋਂ ਲੋਡ ਹੁੰਦੀਆਂ ਹਨ।</div>
-</main>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-<script>
-(() => {
-'use strict';
-if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc =
- 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-const $ = id => document.getElementById(id);
-const state = {
- front:{img:null,name:'',crop:{x:.08,y:.08,w:.84,h:.84},rotation:0,mirror:false},
- back:{img:null,name:'',crop:{x:.08,y:.08,w:.84,h:.84},rotation:0,mirror:false}
-};
-let side='front', drag=null, imgRect=null, physical={w:85.6,h:54};
-const canvas=$('canvas'), ctx=canvas.getContext('2d'), box=$('cropBox');
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const cur=()=>state[side];
-const say=(id,msg,warning=false)=>{$(id).textContent=msg;$(id).classList.toggle('warn',warning);};
-const download=(blob,name)=>{
- const url=URL.createObjectURL(blob),a=document.createElement('a');
- a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
- setTimeout(()=>URL.revokeObjectURL(url),1500);
-};
-function safeName(s){return (s||'card').replace(/\.[^.]+$/,'').replace(/[^\w-]+/g,'_').slice(0,55)||'card';}
-function drawPreview(){
- ctx.clearRect(0,0,canvas.width,canvas.height);
- ctx.fillStyle='#edf2fa';ctx.fillRect(0,0,canvas.width,canvas.height);
- const s=cur();
- if(!s.img){box.classList.add('hidden');ctx.fillStyle='#71819c';ctx.font='22px system-ui';ctx.textAlign='center';ctx.fillText('ਫਾਈਲ ਚੁਣੋ',450,270);imgRect=null;return;}
- const iw=s.img.naturalWidth||s.img.width, ih=s.img.naturalHeight||s.img.height;
- if(!iw||!ih)return;
- const scale=Math.min(850/iw,500/ih);
- const w=iw*scale,h=ih*scale,x=(900-w)/2,y=(540-h)/2;
- imgRect={x,y,w,h};
- ctx.save();ctx.translate(450,270);ctx.rotate(s.rotation*Math.PI/180);
- const rw=s.rotation%180===0?w:h,rh=s.rotation%180===0?h:w;
- ctx.scale(s.mirror?-1:1,1);
- ctx.drawImage(s.img,-rw/2,-rh/2,rw,rh);ctx.restore();
- updateBox();
-}
-function updateBox(){
- if(!cur().img||!imgRect){box.classList.add('hidden');return;}
- const c=cur().crop;
- box.classList.remove('hidden');
- box.style.left=(imgRect.x+c.x*imgRect.w)/9+'%';
- box.style.top=(imgRect.y+c.y*imgRect.h)/6+'%';
- box.style.width=(c.w*imgRect.w/9)+'%';
- box.style.height=(c.h*imgRect.h/6)+'%';
-}
-function setCrop(c){cur().crop={x:clamp(c.x,0,.98),y:clamp(c.y,0,.98),w:clamp(c.w,.02,1),h:clamp(c.h,.02,1)};const q=cur().crop;q.w=Math.min(q.w,1-q.x);q.h=Math.min(q.h,1-q.y);updateBox();}
-function switchSide(s){
- side=s;$('frontTab').classList.toggle('active',s==='front');$('backTab').classList.toggle('active',s==='back');drawPreview();
- say('cropStatus',cur().img?'ਇਸ ਪਾਸੇ ਦਾ crop ਖਿੱਚ ਕੇ ਠੀਕ ਕਰੋ।':'ਇਸ ਪਾਸੇ ਦੀ ਫਾਈਲ ਹਾਲੇ ਲੋਡ ਨਹੀਂ ਹੋਈ।');
-}
-$('frontTab').onclick=()=>switchSide('front');$('backTab').onclick=()=>switchSide('back');
-function pointerPos(e){
- const r=canvas.getBoundingClientRect();
- return {x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height};
-}
-box.addEventListener('pointerdown',e=>{
- if(!cur().img||!imgRect)return;
- e.preventDefault();box.setPointerCapture?.(e.pointerId);
- const p=pointerPos(e),c={...cur().crop},handle=e.target.dataset.handle||'move';
- drag={p,c,handle};box.setPointerCapture(e.pointerId);
-});
-box.addEventListener('pointermove',e=>{
- if(!drag||!imgRect)return;
- const p=pointerPos(e),dx=(p.x-drag.p.x)/imgRect.w,dy=(p.y-drag.p.y)/imgRect.h,c={...drag.c};
- if(drag.handle==='move'){c.x=clamp(c.x+dx,0,1-c.w);c.y=clamp(c.y+dy,0,1-c.h);}
- else{
-  let x1=c.x,y1=c.y,x2=c.x+c.w,y2=c.y+c.h;
-  if(drag.handle.includes('l'))x1=clamp(x1+dx,0,x2-.02);
-  if(drag.handle.includes('r'))x2=clamp(x2+dx,x1+.02,1);
-  if(drag.handle.includes('t'))y1=clamp(y1+dy,0,y2-.02);
-  if(drag.handle.includes('b'))y2=clamp(y2+dy,y1+.02,1);
-  c.x=x1;c.y=y1;c.w=x2-x1;c.h=y2-y1;
- }
- setCrop(c);
-});
-box.addEventListener('pointerup',()=>drag=null);box.addEventListener('pointercancel',()=>drag=null);
-
-async function loadFile(file,s){
- if(!file)return;
- say('loadStatus','ਫਾਈਲ ਲੋਡ ਹੋ ਰਹੀ ਹੈ…');
- try{
-  let img;
-  if(file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf')){
-   if(!window.pdfjsLib)throw Error('PDF ਲਾਇਬ੍ਰੇਰੀ ਲੋਡ ਨਹੀਂ ਹੋਈ। ਇੰਟਰਨੈੱਟ ਚੈੱਕ ਕਰੋ।');
-   const bytes=await file.arrayBuffer();
-   let pdf;
-   try{pdf=await pdfjsLib.getDocument({data:bytes.slice(0)}).promise;}
-   catch(err){
-    if(!String(err.name).includes('Password')&&!String(err.message).toLowerCase().includes('password'))throw err;
-    const password=prompt('ਇਸ PDF ਦਾ ਪਾਸਵਰਡ ਦਿਓ। ਪਾਸਵਰਡ ਸੇਵ ਨਹੀਂ ਕੀਤਾ ਜਾਵੇਗਾ:');
-    if(password===null)throw Error('ਪਾਸਵਰਡ ਦਰਜ ਨਹੀਂ ਕੀਤਾ।');
-    pdf=await pdfjsLib.getDocument({data:bytes.slice(0),password}).promise;
-   }
-   const page=await pdf.getPage(1),vp=page.getViewport({scale:2});
-   const c=document.createElement('canvas');c.width=Math.ceil(vp.width);c.height=Math.ceil(vp.height);
-   await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
-   img=new Image();img.src=c.toDataURL('image/png');await img.decode();
-  }else{
-   if(!file.type.startsWith('image/'))throw Error('JPG, PNG ਜਾਂ PDF ਫਾਈਲ ਚੁਣੋ।');
-   img=new Image();img.src=URL.createObjectURL(file);await img.decode();
+  if (orientation === 'landscape' && mmH > mmW) {
+    [mmW, mmH] = [mmH, mmW];
   }
-  s.img=img;s.name=file.name;s.crop={x:.04,y:.04,w:.92,h:.92};s.rotation=0;s.mirror=false;
-  $(s===state.front?'frontName':'backName').textContent='✓ '+file.name;
-  if(s===cur())drawPreview();
-  say('loadStatus','ਫਾਈਲ ਸਫਲਤਾਪੂਰਵਕ ਲੋਡ ਹੋ ਗਈ। Auto Crop ਦਬਾਓ ਜਾਂ crop ਨੂੰ ਖਿੱਚ ਕੇ ਠੀਕ ਕਰੋ।');
-  say('cropStatus','ਫਾਈਲ ਲੋਡ ਹੋ ਗਈ। Auto Crop ਕਰਨ ਲਈ ਤਿਆਰ।');
- }catch(e){say('loadStatus','ਫਾਈਲ ਨਹੀਂ ਖੁੱਲ੍ਹੀ: '+e.message,true);}
-}
-$('frontFile').addEventListener('change',e=>loadFile(e.target.files[0],state.front));
-$('backFile').addEventListener('change',e=>loadFile(e.target.files[0],state.back));
 
-function autoCrop(){
- const s=cur();if(!s.img){say('cropStatus','ਪਹਿਲਾਂ ਇਸ ਪਾਸੇ ਦੀ ਫਾਈਲ ਚੁਣੋ।',true);return;}
- const iw=s.img.naturalWidth||s.img.width,ih=s.img.naturalHeight||s.img.height;
- const scale=Math.min(700/iw,700/ih,1),w=Math.max(1,Math.round(iw*scale)),h=Math.max(1,Math.round(ih*scale));
- const c=document.createElement('canvas');c.width=w;c.height=h;
- const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(s.img,0,0,w,h);
- const data=x.getImageData(0,0,w,h).data;
- // Estimate the background using the four corners and look for pixels that differ.
- const sample=(px,py)=>{const i=(clamp(px,0,w-1)+clamp(py,0,h-1)*w)*4;return [data[i],data[i+1],data[i+2]]};
- const pts=[sample(2,2),sample(w-3,2),sample(2,h-3),sample(w-3,h-3)];
- const bg=[0,1,2].map(k=>pts.reduce((a,p)=>a+p[k],0)/pts.length);
- const dist=(i)=>Math.abs(data[i]-bg[0])+Math.abs(data[i+1]-bg[1])+Math.abs(data[i+2]-bg[2]);
- const threshold=68, step=Math.max(1,Math.floor(Math.min(w,h)/500));
- let minX=w,minY=h,maxX=-1,maxY=-1,count=0;
- for(let yy=0;yy<h;yy+=step)for(let xx=0;xx<w;xx+=step){
-  const i=(xx+yy*w)*4;
-  if(dist(i)>threshold){minX=Math.min(minX,xx);maxX=Math.max(maxX,xx);minY=Math.min(minY,yy);maxY=Math.max(maxY,yy);count++;}
- }
- const area=(maxX-minX+1)*(maxY-minY+1);
- if(count<20||maxX<0||area<w*h*.08||area>w*h*.98){
-  s.crop={x:.03,y:.03,w:.94,h:.94};
-  say('cropStatus','ਸਾਫ਼ ਕਾਰਡ ਦੀ ਹੱਦ ਪੱਕੀ ਨਹੀਂ ਮਿਲੀ। ਲਗਭਗ ਪੂਰੀ ਤਸਵੀਰ ਚੁਣੀ ਹੈ—ਨੀਲੇ ਕੋਨੇ ਖਿੱਚ ਕੇ ਠੀਕ ਕਰੋ।',true);
- }else{
-  const pad=0.012;
-  s.crop={x:clamp(minX/w-pad,0,.95),y:clamp(minY/h-pad,0,.95),
-   w:clamp((maxX-minX+1)/w+pad*2,.05,1),h:clamp((maxY-minY+1)/h+pad*2,.05,1)};
-  s.crop.w=Math.min(s.crop.w,1-s.crop.x);s.crop.h=Math.min(s.crop.h,1-s.crop.y);
-  say('cropStatus','Auto Crop ਨੇ ਸੰਭਾਵੀ ਹੱਦ ਚੁਣੀ ਹੈ। Preview ਚੈੱਕ ਕਰੋ—ਲੋੜ ਹੋਵੇ ਤਾਂ ਹੱਥ ਨਾਲ ਠੀਕ ਕਰੋ।');
- }
- drawPreview();
-}
-$('autoCrop').onclick=autoCrop;
-$('fullCrop').onclick=()=>{cur().crop={x:0,y:0,w:1,h:1};drawPreview();say('cropStatus','ਪੂਰੀ ਤਸਵੀਰ ਚੁਣੀ ਗਈ ਹੈ।');};
-$('rotate').onclick=()=>{cur().rotation=(cur().rotation+90)%360;drawPreview();};
-$('mirror').onclick=()=>{cur().mirror=!cur().mirror;drawPreview();};
+  if (orientation === 'portrait' && mmW > mmH) {
+    [mmW, mmH] = [mmH, mmW];
+  }
 
-function setPhysical(w,h){
- physical={w,h};
- const unit=$('unit').value;
- if(unit==='percent'){
-  const s=cur(),iw=s.img?.naturalWidth||100,ih=s.img?.naturalHeight||100;
-  const cropW=iw*s.crop.w,cropH=ih*s.crop.h;
-  $('width').value=(w/Math.max(1,cropW)*100).toFixed(1);
-  $('height').value=(h/Math.max(1,cropH)*100).toFixed(1);
- }else if(unit==='cm'){
-  $('width').value=(w/10).toFixed(2);$('height').value=(h/10).toFixed(2);
- }else{$('width').value=w.toFixed(1);$('height').value=h.toFixed(1);}
- $('widthLabel').textContent='ਚੌੜਾਈ ('+(unit==='percent'?'%':unit)+')';
- $('heightLabel').textContent='ਉਚਾਈ ('+(unit==='percent'?'%':unit)+')';
-}
-function readPhysical(){
- let w=Number($('width').value),h=Number($('height').value),unit=$('unit').value;
- if(!Number.isFinite(w)||!Number.isFinite(h)||w<=0||h<=0)return null;
- if(unit==='cm'){w*=10;h*=10;}
- if(unit==='percent'){
-  const s=cur();if(!s.img)return null;
-  w=(s.img.naturalWidth*s.crop.w)*w/100;
-  h=(s.img.naturalHeight*s.crop.h)*h/100;
- }
- return {w,h};
-}
-$('unit').onchange=()=>{
- const p=readPhysical();if(p)setPhysical(p.w,p.h);
- else setPhysical(85.6,54);
-};
-$('width').onchange=$('height').onchange=()=>{
- const p=readPhysical();if(p)physical=p;
-};
-$('standardSize').onclick=()=>{setPhysical(85.6,54);say('sizeNote','ਆਮ ID ਕਾਰਡ ਸਾਈਜ਼: 85.6 × 54 mm।');};
-$('cardType').onchange=()=>{
- const t=$('cardType').value;
- if(t==='custom'){say('sizeNote','Custom ਚੁਣਿਆ ਹੈ। ਆਪਣੀ ਲੋੜ ਅਨੁਸਾਰ ਸਾਈਜ਼ ਦਿਓ।');return;}
- setPhysical(85.6,54);
- say('sizeNote',t==='auto'?'Auto Size ਕਾਰਡ ਦੇ ਅਨੁਪਾਤ ਤੋਂ ਸਾਈਜ਼ ਦਾ ਸੁਝਾਅ ਦੇਵੇਗਾ।':'ਇਸ ਕਿਸਮ ਲਈ ਸ਼ੁਰੂਆਤੀ ਸਾਈਜ਼ 85.6 × 54 mm ਹੈ। ਲੋੜ ਅਨੁਸਾਰ ਬਦਲ ਸਕਦੇ ਹੋ।');
-};
-$('orientation').onchange=()=>{
- const o=$('orientation').value,p=readPhysical()||physical;
- if(o==='portrait')setPhysical(Math.min(p.w,p.h),Math.max(p.w,p.h));
- else if(o==='landscape')setPhysical(Math.max(p.w,p.h),Math.min(p.w,p.h));
- else if(o==='square')setPhysical(Math.max(p.w,p.h),Math.max(p.w,p.h));
-};
-$('autoSize').onclick=()=>{
- if(!cur().img){say('sizeNote','ਪਹਿਲਾਂ ਫਾਈਲ ਚੁਣੋ।',true);return;}
- const s=cur(),iw=(s.img.naturalWidth||s.img.width)*s.crop.w,ih=(s.img.naturalHeight||s.img.height)*s.crop.h;
- const ratio=iw/ih;
- const o=$('orientation').value;
- let w=85.6,h=54;
- if(o==='square'){w=54;h=54;}
- else if(o==='portrait'||(o==='auto'&&ratio<1)){w=54;h=85.6;}
- setPhysical(w,h);
- say('sizeNote','Auto Size ਸੁਝਾਅ: '+w+' × '+h+' mm। ਇਹ ਅਨੁਪਾਤ-ਅਧਾਰਿਤ ਅਨੁਮਾਨ ਹੈ, ਅਸਲ ਭੌਤਿਕ ਸਾਈਜ਼ ਦੀ ਪਛਾਣ ਨਹੀਂ।');
-};
+  const outW = Math.round((mmW / 25.4) * dpi);
+  const outH = Math.round((mmH / 25.4) * dpi);
 
-function makeOutput(s,p){
- const c=document.createElement('canvas');
- const dpi=300;
- let mmW=p.w,mmH=p.h;
- if($('orientation').value==='landscape'&&mmH>mmW)[mmW,mmH]=[mmH,mmW];
- if($('orientation').value==='portrait'&&mmW>mmH)[mmW,mmH]=[mmH,mmW];
- const outW=Math.max(1,Math.round(mmW/25.4*dpi)),outH=Math.max(1,Math.round(mmH/25.4*dpi));
- c.width=outW;c.height=outH;
- const x=c.getContext('2d');
- x.fillStyle='white';x.fillRect(0,0,outW,outH);
- const crop=s.crop,iw=s.img.naturalWidth||s.img.width,ih=s.img.naturalHeight||s.img.height;
- const src=document.createElement('canvas');
- const sw=Math.max(1,Math.round(iw*crop.w)),sh=Math.max(1,Math.round(ih*crop.h));
- src.width=sw;src.height=sh;
- const sx=src.getContext('2d');
- sx.translate(sw/2,sh/2);sx.rotate(s.rotation*Math.PI/180);sx.scale(s.mirror?-1:1,1);
- sx.drawImage(s.img,-sw/2,-sh/2,sw,sh);
- let dw=outW,dh=outH;
- // Preserve the physical card proportions and fit content inside the output.
- const border=Math.min(Number($('border').value)||0,10);
- const inset=Math.round(border/25.4*dpi);
- const maxW=Math.max(1,outW-inset*2),maxH=Math.max(1,outH-inset*2);
- const ratio=src.width/src.height;
- if(maxW/maxH>ratio){dh=maxH;dw=Math.round(dh*ratio);}else{dw=maxW;dh=Math.round(dw/ratio);}
- x.drawImage(src,(outW-dw)/2,(outH-dh)/2,dw,dh);
- if(border>0){
-  x.strokeStyle=$('borderColor').value;x.lineWidth=Math.max(1,inset);
-  x.strokeRect(inset/2,inset/2,outW-inset,outH-inset);
- }
- return {canvas:c,w:mmW,h:mmH};
-}
-function canvasBlob(c){return new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(Error('JPG ਨਹੀਂ ਬਣ ਸਕੀ।')),'image/jpeg',.95));}
-async function exportJpg(){
- const p=readPhysical();if(!p){say('exportStatus','ਸਹੀ width ਅਤੇ height ਦਿਓ।',true);return;}
- if(!state.front.img){say('exportStatus','ਪਹਿਲਾਂ Front ਫਾਈਲ ਚੁਣੋ।',true);return;}
- try{
-  say('exportStatus','JPG ਬਣ ਰਹੀਆਂ ਹਨ…');
-  for(const key of ['front','back']){
-   const s=state[key];if(!s.img)continue;
-   const out=makeOutput(s,p);
-   download(await canvasBlob(out.canvas),safeName(s.name)+'_'+key+'.jpg');
-   await new Promise(r=>setTimeout(r,250));
+  const output = document.createElement('canvas');
+  output.width = outW;
+  output.height = outH;
+
+  const ctx = output.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, outW, outH);
+
+  const img = s.img;
+  const iw = img.naturalWidth || img.width;
+  const ih = img.naturalHeight || img.height;
+
+  const crop = s.crop || {
+    x: 0, y: 0, w: 1, h: 1
+  };
+
+  const sx = Math.max(0, Math.floor(crop.x * iw));
+  const sy = Math.max(0, Math.floor(crop.y * ih));
+  const sw = Math.max(1, Math.min(iw - sx, Math.round(crop.w * iw)));
+  const sh = Math.max(1, Math.min(ih - sy, Math.round(crop.h * ih)));
+
+  // 1. Crop the selected part of the original image
+  const cropped = document.createElement('canvas');
+  cropped.width = sw;
+  cropped.height = sh;
+
+  const cropCtx = cropped.getContext('2d');
+  cropCtx.drawImage(
+    img,
+    sx, sy, sw, sh,
+    0, 0, sw, sh
+  );
+
+  // 2. Rotate and mirror the cropped image
+  const rotation = ((s.rotation || 0) % 360 + 360) % 360;
+  const sideways = rotation === 90 || rotation === 270;
+
+  const rotated = document.createElement('canvas');
+  rotated.width = sideways ? sh : sw;
+  rotated.height = sideways ? sw : sh;
+
+  const rctx = rotated.getContext('2d');
+  rctx.translate(rotated.width / 2, rotated.height / 2);
+  rctx.rotate(rotation * Math.PI / 180);
+  rctx.scale(s.mirror ? -1 : 1, 1);
+  rctx.drawImage(cropped, -sw / 2, -sh / 2);
+
+  // 3. Fit the image inside the card with the selected border
+  const border = Math.max(
+    0,
+    Math.min(10, Number($('border').value) || 0)
+  );
+
+  const inset = Math.round((border / 25.4) * dpi);
+  const maxW = Math.max(1, outW - inset * 2);
+  const maxH = Math.max(1, outH - inset * 2);
+
+  const ratio = rotated.width / rotated.height;
+  let drawW;
+  let drawH;
+
+  if (maxW / maxH > ratio) {
+    drawH = maxH;
+    drawW = Math.round(drawH * ratio);
+  } else {
+    drawW = maxW;
+    drawH = Math.round(drawW / ratio);
   }
-  say('exportStatus','JPG ਫਾਈਲਾਂ ਤਿਆਰ ਹਨ। ਜੇ ਦੋਵੇਂ ਪਾਸੇ ਹਨ ਤਾਂ ਦੋ ਵੱਖਰੀਆਂ JPG ਡਾਊਨਲੋਡ ਹੋਣਗੀਆਂ।');
- }catch(e){say('exportStatus','Export ਅਸਫਲ: '+e.message,true);}
+
+  ctx.drawImage(
+    rotated,
+    (outW - drawW) / 2,
+    (outH - drawH) / 2,
+    drawW,
+    drawH
+  );
+
+  return {
+    canvas: output,
+    w: mmW,
+    h: mmH
+  };
 }
-async function exportPdf(){
- const p=readPhysical();if(!p){say('exportStatus','ਸਹੀ width ਅਤੇ height ਦਿਓ।',true);return;}
- if(!state.front.img){say('exportStatus','ਪਹਿਲਾਂ Front ਫਾਈਲ ਚੁਣੋ।',true);return;}
- if(!window.PDFLib){say('exportStatus','PDF ਲਾਇਬ੍ਰੇਰੀ ਲੋਡ ਨਹੀਂ ਹੋਈ। ਇੰਟਰਨੈੱਟ ਚੈੱਕ ਕਰੋ।',true);return;}
- try{
-  say('exportStatus','PDF ਬਣ ਰਹੀ ਹੈ…');
-  const combined=$('layout').value==='combined'&&state.back.img;
-  const keys=combined?['front','back']:['front',...(state.back.img?['back']:[])];
-  for(const key of keys){
-   const s=state[key];if(!s.img)continue;
-   const out=makeOutput(s,p),blob=await canvasBlob(out.canvas),bytes=await blob.arrayBuffer();
-   const doc=await PDFLib.PDFDocument.create();
-   const jpg=await doc.embedJpg(bytes);
-   const page=doc.addPage([p.w/25.4*72,p.h/25.4*72]);
-   page.drawImage(jpg,{x:0,y:0,width:page.getWidth(),height:page.getHeight()});
-   // Individual PDFs are the default. Combined PDFs are built below when requested.
-   if(!combined)download(new Blob([await doc.save()],{type:'application/pdf'}),safeName(s.name)+'_'+key+'.pdf');
-  }
-  if(combined){
-   const doc=await PDFLib.PDFDocument.create();
-   for(const key of ['front','back']){
-    const out=makeOutput(state[key],p),bytes=await (await canvasBlob(out.canvas)).arrayBuffer();
-    const jpg=await doc.embedJpg(bytes);
-    const page=doc.addPage([p.w/25.4*72,p.h/25.4*72]);
-    page.drawImage(jpg,{x:0,y:0,width:page.getWidth(),height:page.getHeight()});
-   }
-   download(new Blob([await doc.save()],{type:'application/pdf'}),'PrintCard_Front_Back.pdf');
-  }
-  say('exportStatus',combined?'ਇੱਕ PDF ਤਿਆਰ ਹੈ: ਪੰਨਾ 1 Front, ਪੰਨਾ 2 Back.':'PDF ਫਾਈਲਾਂ ਤਿਆਰ ਹਨ। Front ਅਤੇ Back ਵੱਖ-ਵੱਖ ਡਾਊਨਲੋਡ ਹੋਣਗੀਆਂ।');
- }catch(e){say('exportStatus','PDF Export ਅਸਫਲ: '+e.message,true);}
-}
-$('exportJpg').onclick=exportJpg;$('exportPdf').onclick=exportPdf;
-setPhysical(85.6,54);drawPreview();
-})();
-</script>
-</body>
-</html>
