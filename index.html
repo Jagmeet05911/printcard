@@ -1,103 +1,270 @@
 
-function makeOutput(s, p) {
-  const dpi = 300;
-
-  let mmW = p.w;
-  let mmH = p.h;
-
-  const orientation = $('orientation').value;
-
-  if (orientation === 'landscape' && mmH > mmW) {
-    [mmW, mmH] = [mmH, mmW];
-  }
-
-  if (orientation === 'portrait' && mmW > mmH) {
-    [mmW, mmH] = [mmH, mmW];
-  }
-
-  const outW = Math.round((mmW / 25.4) * dpi);
-  const outH = Math.round((mmH / 25.4) * dpi);
-
-  const output = document.createElement('canvas');
-  output.width = outW;
-  output.height = outH;
-
-  const ctx = output.getContext('2d');
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, outW, outH);
-
-  const img = s.img;
-  const iw = img.naturalWidth || img.width;
-  const ih = img.naturalHeight || img.height;
-
-  const crop = s.crop || {
-    x: 0, y: 0, w: 1, h: 1
-  };
-
-  const sx = Math.max(0, Math.floor(crop.x * iw));
-  const sy = Math.max(0, Math.floor(crop.y * ih));
-  const sw = Math.max(1, Math.min(iw - sx, Math.round(crop.w * iw)));
-  const sh = Math.max(1, Math.min(ih - sy, Math.round(crop.h * ih)));
-
-  // 1. Crop the selected part of the original image
-  const cropped = document.createElement('canvas');
-  cropped.width = sw;
-  cropped.height = sh;
-
-  const cropCtx = cropped.getContext('2d');
-  cropCtx.drawImage(
-    img,
-    sx, sy, sw, sh,
-    0, 0, sw, sh
-  );
-
-  // 2. Rotate and mirror the cropped image
-  const rotation = ((s.rotation || 0) % 360 + 360) % 360;
-  const sideways = rotation === 90 || rotation === 270;
-
-  const rotated = document.createElement('canvas');
-  rotated.width = sideways ? sh : sw;
-  rotated.height = sideways ? sw : sh;
-
-  const rctx = rotated.getContext('2d');
-  rctx.translate(rotated.width / 2, rotated.height / 2);
-  rctx.rotate(rotation * Math.PI / 180);
-  rctx.scale(s.mirror ? -1 : 1, 1);
-  rctx.drawImage(cropped, -sw / 2, -sh / 2);
-
-  // 3. Fit the image inside the card with the selected border
-  const border = Math.max(
-    0,
-    Math.min(10, Number($('border').value) || 0)
-  );
-
-  const inset = Math.round((border / 25.4) * dpi);
-  const maxW = Math.max(1, outW - inset * 2);
-  const maxH = Math.max(1, outH - inset * 2);
-
-  const ratio = rotated.width / rotated.height;
-  let drawW;
-  let drawH;
-
-  if (maxW / maxH > ratio) {
-    drawH = maxH;
-    drawW = Math.round(drawH * ratio);
-  } else {
-    drawW = maxW;
-    drawH = Math.round(drawW / ratio);
-  }
-
-  ctx.drawImage(
-    rotated,
-    (outW - drawW) / 2,
-    (outH - drawH) / 2,
-    drawW,
-    drawH
-  );
-
-  return {
-    canvas: output,
-    w: mmW,
-    h: mmH
-  };
+<!DOCTYPE html>
+<html lang="pa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PrintCard | Aadhaar Print</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f2f5fa;color:#172033;font-family:Arial,sans-serif}
+header{background:#142b52;color:white;padding:22px 16px;text-align:center}
+header h1{margin:0 0 6px}
+main{max-width:900px;margin:20px auto;padding:0 12px}
+.panel{background:white;border-radius:14px;padding:18px;margin-bottom:15px;box-shadow:0 3px 14px #142b5212}
+h2{font-size:19px;margin:0 0 14px}
+label{display:block;font-weight:600;margin:12px 0 6px}
+input,select,button{font:inherit}
+input[type=file],input[type=password],select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px;background:white}
+button{border:0;border-radius:9px;padding:12px 15px;cursor:pointer;font-weight:700;background:#155eef;color:white}
+button.secondary{background:#e8eef9;color:#18345f}
+button:disabled{opacity:.45;cursor:not-allowed}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+#status{font-size:14px;color:#475569;white-space:pre-wrap}
+#preview{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;min-height:80px}
+.sheet{width:min(100%,340px);aspect-ratio:210/297;background:white;border:1px solid #ccd4df;position:relative;padding:12px;display:flex;flex-direction:column;gap:12px;justify-content:center}
+.card{width:100%;aspect-ratio:85.6/54;background:#fff;border:1px dashed #111;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.card img{width:100%;height:100%;object-fit:contain}
+.card span{color:#64748b;font-size:12px;text-align:center;padding:6px}
+.cropmark{position:absolute;width:9px;height:9px;pointer-events:none}
+.cropmark:before,.cropmark:after{content:"";position:absolute;background:#111}
+.cropmark:before{width:9px;height:1px;top:4px}
+.cropmark:after{width:1px;height:9px;left:4px}
+.tl{top:-5px;left:-5px}.tr{top:-5px;right:-5px}.bl{bottom:-5px;left:-5px}.br{bottom:-5px;right:-5px}
+.note{font-size:13px;line-height:1.5;color:#526078}
+.hidden{display:none!important}
+footer{text-align:center;padding:20px;color:#64748b;font-size:13px}
+@media print{
+ body{background:white}
+ header,.no-print,footer{display:none!important}
+ main{margin:0;padding:0;max-width:none}
+ .panel{box-shadow:none;border-radius:0;margin:0;padding:0}
+ #preview{display:block}
+ .sheet{width:210mm;height:297mm;max-width:none;border:0;padding:12mm;break-after:page;page-break-after:always}
+ .sheet:last-child{break-after:auto}
 }
+</style>
+</head>
+<body>
+<header>
+<h1>PrintCard</h1>
+<div>Aadhaar PDF • Pocket Size • Print</div>
+</header>
+<main>
+<section class="panel no-print">
+<h2>1. Aadhaar PDF ਅੱਪਲੋਡ ਕਰੋ</h2>
+<label for="pdfFile">PDF ਫ਼ਾਈਲ</label>
+<input id="pdfFile" type="file" accept="application/pdf,.pdf">
+<label for="pdfPassword">PDF ਪਾਸਵਰਡ (ਜੇ ਲੋੜ ਹੋਵੇ)</label>
+<input id="pdfPassword" type="password" autocomplete="off" placeholder="ਪਾਸਵਰਡ ਇੱਥੇ ਲਿਖੋ">
+<div class="actions">
+<button id="openBtn">PDF ਖੋਲ੍ਹੋ</button>
+<button id="clearBtn" class="secondary">ਫ਼ਾਈਲ ਤੇ ਪਾਸਵਰਡ ਸਾਫ਼ ਕਰੋ</button>
+</div>
+<p class="note">ਪਾਸਵਰਡ ਇਸ ਪੇਜ ਵਿੱਚ ਸੇਵ ਨਹੀਂ ਕੀਤਾ ਜਾਂਦਾ। PDF ਖੋਲ੍ਹਣ ਤੋਂ ਬਾਅਦ ਪਾਸਵਰਡ ਵਾਲਾ ਖਾਨਾ ਸਾਫ਼ ਕਰ ਦਿੱਤਾ ਜਾਂਦਾ ਹੈ।</p>
+</section>
+
+<section class="panel no-print">
+<h2>2. ਕਾਰਡ ਦੀ ਸੈਟਿੰਗ</h2>
+<label for="side">ਕਿਹੜਾ ਪਾਸਾ ਪ੍ਰਿੰਟ ਕਰਨਾ ਹੈ?</label>
+<select id="side">
+<option value="both">Front + Back (PDF ਦੇ ਪਹਿਲੇ ਦੋ ਪੰਨੇ)</option>
+<option value="front">ਸਿਰਫ਼ Front (ਪਹਿਲਾ ਪੰਨਾ)</option>
+<option value="back">ਸਿਰਫ਼ Back (ਦੂਜਾ ਪੰਨਾ)</option>
+</select>
+<label for="layout">ਪ੍ਰੀਵਿਊ ਲੇਆਉਟ</label>
+<select id="layout">
+<option value="pocket">Pocket size (ਲਗਭਗ 85.6 × 54 mm)</option>
+<option value="original">A4 PDF ਦਾ ਅਸਲ ਪੰਨਾ</option>
+</select>
+<label for="copies">ਹਰ ਪਾਸੇ ਦੀਆਂ ਕਾਪੀਆਂ</label>
+<select id="copies">
+<option>1</option><option>2</option><option>3</option><option>4</option>
+</select>
+<div class="actions">
+<button id="previewBtn" disabled>ਪ੍ਰੀਵਿਊ ਬਣਾਓ</button>
+<button id="jpgBtn" disabled>JPG ਡਾਊਨਲੋਡ</button>
+<button id="pdfBtn" disabled>PDF ਡਾਊਨਲੋਡ</button>
+<button id="printBtn" disabled>Print ਕਰੋ</button>
+</div>
+<p class="note">A4 PDF ਵਿੱਚ ਪਹਿਲੇ ਪੰਨੇ ਨੂੰ Front ਅਤੇ ਦੂਜੇ ਨੂੰ Back ਮੰਨਿਆ ਜਾਂਦਾ ਹੈ। ਜੇ PDF ਦਾ ਲੇਆਉਟ ਵੱਖਰਾ ਹੈ, ਤਾਂ ਅਸਲ ਪੰਨਾ ਚੁਣ ਕੇ ਉਸੇ ਲੇਆਉਟ ਵਿੱਚ ਪ੍ਰਿੰਟ ਕਰੋ।</p>
+</section>
+
+<section class="panel">
+<h2>3. ਪ੍ਰੀਵਿਊ</h2>
+<div id="status" role="status">ਹਾਲੇ ਕੋਈ PDF ਨਹੀਂ ਖੋਲ੍ਹੀ ਗਈ।</div>
+<div id="preview"></div>
+</section>
+</main>
+<footer>PrintCard • ਫ਼ਾਈਲ ਤੁਹਾਡੇ ਬ੍ਰਾਊਜ਼ਰ ਵਿੱਚ ਪ੍ਰੋਸੈਸ ਹੁੰਦੀ ਹੈ।</footer>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const $ = id => document.getElementById(id);
+let pages = [];
+let sourceBytes = null;
+let originalPdf = null;
+
+function status(message){ $('status').textContent = message; }
+
+function resetOutput(){
+ $('preview').replaceChildren();
+ ['previewBtn','jpgBtn','pdfBtn','printBtn'].forEach(id => $(id).disabled = true);
+}
+
+function clearAll(){
+ pages = [];
+ sourceBytes = null;
+ originalPdf = null;
+ $('pdfFile').value = '';
+ $('pdfPassword').value = '';
+ resetOutput();
+ status('ਫ਼ਾਈਲ ਅਤੇ ਪਾਸਵਰਡ ਸਾਫ਼ ਕਰ ਦਿੱਤੇ ਗਏ।');
+}
+
+$('clearBtn').addEventListener('click', clearAll);
+
+$('openBtn').addEventListener('click', async () => {
+ const file = $('pdfFile').files[0];
+ if(!file){ status('ਪਹਿਲਾਂ PDF ਫ਼ਾਈਲ ਚੁਣੋ।'); return; }
+ const password = $('pdfPassword').value;
+ resetOutput();
+ status('PDF ਖੋਲ੍ਹੀ ਜਾ ਰਹੀ ਹੈ…');
+ try {
+   const bytes = new Uint8Array(await file.arrayBuffer());
+   const task = pdfjsLib.getDocument({data:bytes, password:password});
+   const pdf = await task.promise;
+   pages = [];
+   for(let n=1;n<=pdf.numPages;n++){
+     const page = await pdf.getPage(n);
+     const viewport = page.getViewport({scale:2});
+     const canvas = document.createElement('canvas');
+     canvas.width = Math.ceil(viewport.width);
+     canvas.height = Math.ceil(viewport.height);
+     await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
+     pages.push(canvas);
+   }
+   sourceBytes = bytes;
+   originalPdf = pdf;
+   $('pdfPassword').value = '';
+   $('previewBtn').disabled = false;
+   status('PDF ਖੁੱਲ੍ਹ ਗਈ। ਕੁੱਲ ਪੰਨੇ: '+pdf.numPages+'. ਹੁਣ ਪ੍ਰੀਵਿਊ ਬਣਾਓ।');
+ } catch(e) {
+   $('pdfPassword').value = '';
+   status('PDF ਨਹੀਂ ਖੁੱਲ੍ਹੀ। ਪਾਸਵਰਡ ਚੈੱਕ ਕਰੋ ਜਾਂ ਵੇਖੋ ਕਿ PDF ਸਹੀ ਹੈ। ਵੇਰਵਾ: '+e.message);
+ }
+});
+
+function chosenPages(){
+ const side = $('side').value;
+ if(side==='front') return pages.slice(0,1);
+ if(side==='back') return pages.slice(1,2);
+ return pages.slice(0,2);
+}
+
+function markCorners(card){
+ ['tl','tr','bl','br'].forEach(c=>{
+   const m=document.createElement('i'); m.className='cropmark '+c; card.appendChild(m);
+ });
+}
+
+function renderPreview(){
+ if(!pages.length) return;
+ const host=$('preview');
+ host.replaceChildren();
+ const selected=chosenPages();
+ if(!selected.length){status('ਚੁਣਿਆ ਹੋਇਆ ਪਾਸਾ PDF ਵਿੱਚ ਮੌਜੂਦ ਨਹੀਂ।');return;}
+ const layout=$('layout').value;
+ const copies=Number($('copies').value)||1;
+ selected.forEach((page,idx)=>{
+   for(let c=0;c<copies;c++){
+     if(layout==='original'){
+       const sheet=document.createElement('div');sheet.className='sheet';
+       const img=document.createElement('img');
+       img.src=page.toDataURL('image/jpeg',0.95);
+       img.style.width='100%';img.style.height='100%';img.style.objectFit='contain';
+       sheet.appendChild(img);host.appendChild(sheet);
+     } else {
+       const sheet=document.createElement('div');sheet.className='sheet';
+       const card=document.createElement('div');card.className='card';
+       const img=document.createElement('img');
+       img.src=page.toDataURL('image/jpeg',0.95);
+       card.appendChild(img);markCorners(card);
+       sheet.appendChild(card);host.appendChild(sheet);
+     }
+   }
+ });
+ $('jpgBtn').disabled=false;
+ $('pdfBtn').disabled=false;
+ $('printBtn').disabled=false;
+ status('ਪ੍ਰੀਵਿਊ ਤਿਆਰ ਹੈ। Pocket layout ਵਿੱਚ PDF ਪੰਨੇ ਨੂੰ ਕਾਰਡ ਦੇ ਅਨੁਪਾਤ ਵਿੱਚ ਫਿੱਟ ਕੀਤਾ ਗਿਆ ਹੈ।');
+}
+
+$('previewBtn').addEventListener('click',renderPreview);
+
+$('jpgBtn').addEventListener('click',()=>{
+ const cards=$('preview').querySelectorAll('.card img');
+ const images=cards.length ? Array.from(cards) : Array.from($('preview').querySelectorAll('.sheet img'));
+ if(!images.length){status('ਪਹਿਲਾਂ ਪ੍ਰੀਵਿਊ ਬਣਾਓ।');return;}
+ images.forEach((img,i)=>{
+   const a=document.createElement('a');
+   const canvas=document.createElement('canvas');
+   canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
+   canvas.getContext('2d').drawImage(img,0,0);
+   a.href=canvas.toDataURL('image/jpeg',0.95);
+   a.download='printcard-'+(i+1)+'.jpg';
+   document.body.appendChild(a);a.click();a.remove();
+ });
+});
+
+$('pdfBtn').addEventListener('click',async()=>{
+ try{
+   const {PDFDocument}=PDFLib;
+   const out=await PDFDocument.create();
+   const sheets=$('preview').querySelectorAll('.sheet');
+   for(const sheet of sheets){
+     const canvas=document.createElement('canvas');
+     const rect=sheet.getBoundingClientRect();
+     const w=layoutWidth(); const h=layoutHeight();
+     canvas.width=w;canvas.height=h;
+     const ctx=canvas.getContext('2d');
+     ctx.fillStyle='white';ctx.fillRect(0,0,w,h);
+     const imgs=sheet.querySelectorAll('img');
+     if(imgs.length){
+       if($('layout').value==='original'){
+         const img=imgs[0];
+         const scale=Math.min(w/img.naturalWidth,h/img.naturalHeight);
+         const iw=img.naturalWidth*scale,ih=img.naturalHeight*scale;
+         ctx.drawImage(img,(w-iw)/2,(h-ih)/2,iw,ih);
+       } else {
+         const cardW=w*0.88,cardH=cardW*54/85.6;
+         const x=(w-cardW)/2,y=(h-cardH)/2;
+         ctx.drawImage(img,x,y,cardW,cardH);
+         ctx.strokeStyle='#111';ctx.setLineDash([8,6]);ctx.strokeRect(x,y,cardW,cardH);
+       }
+     }
+     const jpg=await out.embedJpg(canvas.toDataURL('image/jpeg',0.95));
+     const p=out.addPage([595.28,841.89]);
+     p.drawImage(jpg,{x:0,y:0,width:595.28,height:841.89});
+   }
+   const bytes=await out.save();
+   downloadBlob(new Blob([bytes],{type:'application/pdf'}),'PrintCard-Aadhaar.pdf');
+ }catch(e){status('PDF ਬਣਾਉਣ ਵਿੱਚ ਗੜਬੜ: '+e.message);}
+});
+
+function layoutWidth(){return 1240;}
+function layoutHeight(){return Math.round(1240*297/210);}
+function downloadBlob(blob,name){
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');a.href=url;a.download=name;
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+$('printBtn').addEventListener('click',()=>window.print());
+</script>
+</body>
+</html>
