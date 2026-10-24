@@ -4,267 +4,577 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PrintCard | Aadhaar Print</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<meta name="theme-color" content="#155eef">
+<title>PrintCard | Aadhaar Print Tool</title>
+
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#f2f5fa;color:#172033;font-family:Arial,sans-serif}
-header{background:#142b52;color:white;padding:22px 16px;text-align:center}
-header h1{margin:0 0 6px}
-main{max-width:900px;margin:20px auto;padding:0 12px}
-.panel{background:white;border-radius:14px;padding:18px;margin-bottom:15px;box-shadow:0 3px 14px #142b5212}
-h2{font-size:19px;margin:0 0 14px}
-label{display:block;font-weight:600;margin:12px 0 6px}
-input,select,button{font:inherit}
-input[type=file],input[type=password],select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px;background:white}
-button{border:0;border-radius:9px;padding:12px 15px;cursor:pointer;font-weight:700;background:#155eef;color:white}
-button.secondary{background:#e8eef9;color:#18345f}
-button:disabled{opacity:.45;cursor:not-allowed}
-.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
-#status{font-size:14px;color:#475569;white-space:pre-wrap}
-#preview{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;min-height:80px}
-.sheet{width:min(100%,340px);aspect-ratio:210/297;background:white;border:1px solid #ccd4df;position:relative;padding:12px;display:flex;flex-direction:column;gap:12px;justify-content:center}
-.card{width:100%;aspect-ratio:85.6/54;background:#fff;border:1px dashed #111;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.card img{width:100%;height:100%;object-fit:contain}
-.card span{color:#64748b;font-size:12px;text-align:center;padding:6px}
-.cropmark{position:absolute;width:9px;height:9px;pointer-events:none}
-.cropmark:before,.cropmark:after{content:"";position:absolute;background:#111}
-.cropmark:before{width:9px;height:1px;top:4px}
-.cropmark:after{width:1px;height:9px;left:4px}
-.tl{top:-5px;left:-5px}.tr{top:-5px;right:-5px}.bl{bottom:-5px;left:-5px}.br{bottom:-5px;right:-5px}
-.note{font-size:13px;line-height:1.5;color:#526078}
-.hidden{display:none!important}
-footer{text-align:center;padding:20px;color:#64748b;font-size:13px}
-@media print{
- body{background:white}
- header,.no-print,footer{display:none!important}
- main{margin:0;padding:0;max-width:none}
- .panel{box-shadow:none;border-radius:0;margin:0;padding:0}
- #preview{display:block}
- .sheet{width:210mm;height:297mm;max-width:none;border:0;padding:12mm;break-after:page;page-break-after:always}
- .sheet:last-child{break-after:auto}
+:root {
+  --blue:#155eef;
+  --dark:#10213a;
+  --bg:#f3f6fb;
+  --border:#dce3ed;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  font-family:Arial,"Noto Sans Gurmukhi",sans-serif;
+  background:var(--bg);
+  color:var(--dark);
+}
+header {
+  background:linear-gradient(130deg,#1246a0,#2477ef);
+  color:white;
+  padding:23px 16px;
+  text-align:center;
+}
+header h1 { margin:0 0 7px; font-size:29px; }
+header p { margin:0; opacity:.9; }
+main { max-width:950px; margin:20px auto; padding:0 13px 35px; }
+.panel {
+  background:white;
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:17px;
+  margin-bottom:15px;
+  box-shadow:0 3px 12px #142b4b0a;
+}
+h2 { font-size:19px; margin:0 0 13px; }
+button,.file-button {
+  border:0;
+  border-radius:10px;
+  padding:12px 15px;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+  display:inline-block;
+  text-align:center;
+}
+.primary { background:var(--blue); color:white; }
+.secondary { background:#eaf1ff; color:#164ca8; }
+.neutral { background:#edf0f5; color:#23334c; }
+.danger { background:#fff0f0; color:#a32222; }
+button:disabled { opacity:.45; cursor:not-allowed; }
+input[type=file] { display:none; }
+input[type=password],select,input[type=number] {
+  width:100%; padding:12px; border:1px solid var(--border);
+  border-radius:9px; font-size:16px; background:white;
+}
+label { display:block; font-weight:600; margin:10px 0 6px; }
+.row { display:flex; gap:9px; flex-wrap:wrap; align-items:center; }
+.row > * { flex:1; }
+.small { color:#65748b; font-size:13px; line-height:1.55; }
+.status {
+  background:#f0f5ff; border-radius:9px; padding:12px;
+  font-size:14px; line-height:1.5; overflow-wrap:anywhere;
+}
+#pageCanvas {
+  display:block; width:100%; height:auto;
+  border:1px solid #d7deea; border-radius:7px;
+  background:#fff; touch-action:pan-y;
+}
+.preview {
+  width:100%; aspect-ratio:1.585;
+  background:#f8fafc; border:1px dashed #aab8cc;
+  border-radius:9px; display:flex; align-items:center;
+  justify-content:center; overflow:hidden; margin:10px 0;
+}
+.preview img { width:100%; height:100%; object-fit:contain; }
+.cropgrid { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+.cropgrid .panel { margin:0; padding:12px; }
+.cropgrid h3 { font-size:16px; margin:2px 0; }
+.cropgrid canvas { width:100%; height:auto; display:block; background:#eee; }
+input[type=range] { width:100%; accent-color:var(--blue); }
+.option { display:flex; align-items:center; gap:8px; margin:11px 0; }
+.option input { width:18px; height:18px; }
+footer { text-align:center; padding:15px; color:#6a7890; font-size:12px; }
+@media(max-width:600px) {
+  header h1 { font-size:25px; }
+  .cropgrid { grid-template-columns:1fr; }
+  .panel { padding:13px; }
+  button,.file-button { padding:12px 10px; }
 }
 </style>
 </head>
+
 <body>
 <header>
-<h1>PrintCard</h1>
-<div>Aadhaar PDF • Pocket Size • Print</div>
+  <h1>PrintCard</h1>
+  <p>Fast • Simple • Print Ready</p>
 </header>
+
 <main>
-<section class="panel no-print">
-<h2>1. Aadhaar PDF ਅੱਪਲੋਡ ਕਰੋ</h2>
-<label for="pdfFile">PDF ਫ਼ਾਈਲ</label>
-<input id="pdfFile" type="file" accept="application/pdf,.pdf">
-<label for="pdfPassword">PDF ਪਾਸਵਰਡ (ਜੇ ਲੋੜ ਹੋਵੇ)</label>
-<input id="pdfPassword" type="password" autocomplete="off" placeholder="ਪਾਸਵਰਡ ਇੱਥੇ ਲਿਖੋ">
-<div class="actions">
-<button id="openBtn">PDF ਖੋਲ੍ਹੋ</button>
-<button id="clearBtn" class="secondary">ਫ਼ਾਈਲ ਤੇ ਪਾਸਵਰਡ ਸਾਫ਼ ਕਰੋ</button>
-</div>
-<p class="note">ਪਾਸਵਰਡ ਇਸ ਪੇਜ ਵਿੱਚ ਸੇਵ ਨਹੀਂ ਕੀਤਾ ਜਾਂਦਾ। PDF ਖੋਲ੍ਹਣ ਤੋਂ ਬਾਅਦ ਪਾਸਵਰਡ ਵਾਲਾ ਖਾਨਾ ਸਾਫ਼ ਕਰ ਦਿੱਤਾ ਜਾਂਦਾ ਹੈ।</p>
-</section>
+  <section class="panel">
+    <h2>1. Upload PDF</h2>
+    <label for="pdfFile" class="file-button primary">📄 Choose Aadhaar PDF</label>
+    <input id="pdfFile" type="file" accept=".pdf,application/pdf">
+    <p class="small">PDF ਤੁਹਾਡੇ ਬ੍ਰਾਊਜ਼ਰ ਵਿੱਚ process ਹੋਵੇਗੀ। Password ਕਿਸੇ server ਨੂੰ ਨਹੀਂ ਭੇਜਿਆ ਜਾਂਦਾ।</p>
 
-<section class="panel no-print">
-<h2>2. ਕਾਰਡ ਦੀ ਸੈਟਿੰਗ</h2>
-<label for="side">ਕਿਹੜਾ ਪਾਸਾ ਪ੍ਰਿੰਟ ਕਰਨਾ ਹੈ?</label>
-<select id="side">
-<option value="both">Front + Back (PDF ਦੇ ਪਹਿਲੇ ਦੋ ਪੰਨੇ)</option>
-<option value="front">ਸਿਰਫ਼ Front (ਪਹਿਲਾ ਪੰਨਾ)</option>
-<option value="back">ਸਿਰਫ਼ Back (ਦੂਜਾ ਪੰਨਾ)</option>
-</select>
-<label for="layout">ਪ੍ਰੀਵਿਊ ਲੇਆਉਟ</label>
-<select id="layout">
-<option value="pocket">Pocket size (ਲਗਭਗ 85.6 × 54 mm)</option>
-<option value="original">A4 PDF ਦਾ ਅਸਲ ਪੰਨਾ</option>
-</select>
-<label for="copies">ਹਰ ਪਾਸੇ ਦੀਆਂ ਕਾਪੀਆਂ</label>
-<select id="copies">
-<option>1</option><option>2</option><option>3</option><option>4</option>
-</select>
-<div class="actions">
-<button id="previewBtn" disabled>ਪ੍ਰੀਵਿਊ ਬਣਾਓ</button>
-<button id="jpgBtn" disabled>JPG ਡਾਊਨਲੋਡ</button>
-<button id="pdfBtn" disabled>PDF ਡਾਊਨਲੋਡ</button>
-<button id="printBtn" disabled>Print ਕਰੋ</button>
-</div>
-<p class="note">A4 PDF ਵਿੱਚ ਪਹਿਲੇ ਪੰਨੇ ਨੂੰ Front ਅਤੇ ਦੂਜੇ ਨੂੰ Back ਮੰਨਿਆ ਜਾਂਦਾ ਹੈ। ਜੇ PDF ਦਾ ਲੇਆਉਟ ਵੱਖਰਾ ਹੈ, ਤਾਂ ਅਸਲ ਪੰਨਾ ਚੁਣ ਕੇ ਉਸੇ ਲੇਆਉਟ ਵਿੱਚ ਪ੍ਰਿੰਟ ਕਰੋ।</p>
-</section>
+    <div id="passwordArea" hidden>
+      <label for="pdfPassword">PDF password</label>
+      <input id="pdfPassword" type="password" autocomplete="off"
+        placeholder="Password ਦਰਜ ਕਰੋ">
+      <div class="row" style="margin-top:9px">
+        <button id="unlockBtn" class="primary">Open PDF</button>
+      </div>
+    </div>
+    <div id="status" class="status" role="status" aria-live="polite">
+      PDF ਚੁਣ ਕੇ ਸ਼ੁਰੂ ਕਰੋ।
+    </div>
+  </section>
 
-<section class="panel">
-<h2>3. ਪ੍ਰੀਵਿਊ</h2>
-<div id="status" role="status">ਹਾਲੇ ਕੋਈ PDF ਨਹੀਂ ਖੋਲ੍ਹੀ ਗਈ।</div>
-<div id="preview"></div>
-</section>
+  <section class="panel">
+    <h2>2. Page preview ਅਤੇ crop</h2>
+    <label for="pageSelect">PDF page</label>
+    <select id="pageSelect" disabled><option>PDF upload ਕਰੋ</option></select>
+    <p class="small">
+      ਹੇਠਾਂ ਦਿੱਤੇ A4 ਪੇਜ ਉੱਤੇ mouse ਜਾਂ ਉਂਗਲ ਨਾਲ drag ਕਰਕੇ Front ਜਾਂ Back ਦਾ
+      crop ਬਣਾਓ। Auto-crop ਸਿਰਫ਼ ਸ਼ੁਰੂਆਤੀ ਅੰਦਾਜ਼ਾ ਹੈ; ਇਹ ਹਰ PDF ਵਿੱਚ ਸਹੀ
+      ਪਛਾਣ ਦੀ ਗਾਰੰਟੀ ਨਹੀਂ ਦਿੰਦਾ।
+    </p>
+    <canvas id="pageCanvas"></canvas>
+    <div class="row" style="margin-top:10px">
+      <button id="autoBtn" class="secondary" disabled>Auto-crop estimate</button>
+      <button id="clearCropBtn" class="neutral" disabled>Clear crop</button>
+    </div>
+    <label for="activeSide">ਕਿਹੜਾ ਪਾਸਾ crop ਕਰਨਾ ਹੈ?</label>
+    <select id="activeSide">
+      <option value="front">Front</option>
+      <option value="back">Back</option>
+    </select>
+  </section>
+
+  <section class="panel">
+    <h2>3. Card-size preview</h2>
+    <p class="small">
+      Crop area ਨੂੰ ਉੱਪਰਲੇ ਪੇਜ preview ਵਿੱਚ drag ਕਰੋ। Card ਦਾ ਅਨੁਪਾਤ
+      ਲਗਭਗ 85.6 × 54 mm ਰੱਖਿਆ ਗਿਆ ਹੈ। ਜੇ ਚੁਣਿਆ ਖੇਤਰ ਵੱਖਰੇ ਅਨੁਪਾਤ ਦਾ ਹੈ,
+      ਤਾਂ export ਵਿੱਚ ਚਿੱਤਰ ਦਾ ਅਨੁਪਾਤ ਕਾਇਮ ਰੱਖਿਆ ਜਾਵੇਗਾ।
+    </p>
+    <div class="cropgrid">
+      <div class="panel">
+        <h3>Front</h3>
+        <div class="preview"><img id="frontPreview" alt="Front crop preview"></div>
+        <button class="secondary" id="selectFront">Select Front</button>
+      </div>
+      <div class="panel">
+        <h3>Back</h3>
+        <div class="preview"><img id="backPreview" alt="Back crop preview"></div>
+        <button class="secondary" id="selectBack">Select Back</button>
+      </div>
+    </div>
+
+    <label for="outputMode">Output</label>
+    <select id="outputMode">
+      <option value="both">Front + Back</option>
+      <option value="front">Front only</option>
+      <option value="back">Back only</option>
+    </select>
+
+    <div class="option">
+      <input id="cutMarks" type="checkbox" checked>
+      <label for="cutMarks" style="margin:0">PDF ਵਿੱਚ cutting marks ਲਗਾਓ</label>
+    </div>
+    <div class="option">
+      <input id="a4Output" type="checkbox" checked>
+      <label for="a4Output" style="margin:0">A4 print sheet ਬਣਾਓ</label>
+    </div>
+    <div class="row" style="margin-top:15px">
+      <button id="jpgBtn" class="primary" disabled>Download JPG</button>
+      <button id="pdfBtn" class="primary" disabled>Download PDF</button>
+      <button id="printBtn" class="secondary" disabled>Print</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>4. ਨਵੀਂ PDF</h2>
+    <p class="small">ਅਗਲੇ ਗਾਹਕ ਦੀ ਫਾਈਲ ਲਈ ਮੌਜੂਦਾ PDF, preview ਅਤੇ crop selections ਸਾਫ਼ ਕਰੋ।</p>
+    <button id="resetBtn" class="danger">Reset / Clear all</button>
+  </section>
 </main>
-<footer>PrintCard • ਫ਼ਾਈਲ ਤੁਹਾਡੇ ਬ੍ਰਾਊਜ਼ਰ ਵਿੱਚ ਪ੍ਰੋਸੈਸ ਹੁੰਦੀ ਹੈ।</footer>
 
+<footer>
+  PrintCard • Local browser processing • Print preview ਤੋਂ ਪਹਿਲਾਂ crop ਚੈੱਕ ਕਰੋ
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
+"use strict";
+
 pdfjsLib.GlobalWorkerOptions.workerSrc =
-'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
 const $ = id => document.getElementById(id);
-let pages = [];
-let sourceBytes = null;
-let originalPdf = null;
+const pageCanvas = $("pageCanvas");
+const pageCtx = pageCanvas.getContext("2d", { willReadFrequently:true });
 
-function status(message){ $('status').textContent = message; }
+let pdfDoc = null;
+let pageNum = 1;
+let pageScale = 1;
+let pageImage = null;
+let dragStart = null;
+let dragCurrent = null;
+let crops = { front:null, back:null };
+let currentPassword = "";
+let pdfBytes = null;
+let renderTask = null;
 
-function resetOutput(){
- $('preview').replaceChildren();
- ['previewBtn','jpgBtn','pdfBtn','printBtn'].forEach(id => $(id).disabled = true);
+function say(message) { $("status").textContent = message; }
+function enableReady(ready) {
+  ["autoBtn","clearCropBtn"].forEach(id => $(id).disabled = !ready);
+  ["jpgBtn","pdfBtn","printBtn"].forEach(id => $(id).disabled = !ready);
 }
+function currentSide() { return $("activeSide").value; }
 
-function clearAll(){
- pages = [];
- sourceBytes = null;
- originalPdf = null;
- $('pdfFile').value = '';
- $('pdfPassword').value = '';
- resetOutput();
- status('ਫ਼ਾਈਲ ਅਤੇ ਪਾਸਵਰਡ ਸਾਫ਼ ਕਰ ਦਿੱਤੇ ਗਏ।');
-}
+$("pdfFile").addEventListener("change", async e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  if (file.size > 80 * 1024 * 1024) {
+    say("ਫਾਈਲ 80 MB ਤੋਂ ਵੱਡੀ ਹੈ। ਛੋਟੀ PDF ਚੁਣੋ।");
+    return;
+  }
+  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+    say("ਕਿਰਪਾ ਕਰਕੇ PDF ਫਾਈਲ ਚੁਣੋ।");
+    return;
+  }
 
-$('clearBtn').addEventListener('click', clearAll);
-
-$('openBtn').addEventListener('click', async () => {
- const file = $('pdfFile').files[0];
- if(!file){ status('ਪਹਿਲਾਂ PDF ਫ਼ਾਈਲ ਚੁਣੋ।'); return; }
- const password = $('pdfPassword').value;
- resetOutput();
- status('PDF ਖੋਲ੍ਹੀ ਜਾ ਰਹੀ ਹੈ…');
- try {
-   const bytes = new Uint8Array(await file.arrayBuffer());
-   const task = pdfjsLib.getDocument({data:bytes, password:password});
-   const pdf = await task.promise;
-   pages = [];
-   for(let n=1;n<=pdf.numPages;n++){
-     const page = await pdf.getPage(n);
-     const viewport = page.getViewport({scale:2});
-     const canvas = document.createElement('canvas');
-     canvas.width = Math.ceil(viewport.width);
-     canvas.height = Math.ceil(viewport.height);
-     await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
-     pages.push(canvas);
-   }
-   sourceBytes = bytes;
-   originalPdf = pdf;
-   $('pdfPassword').value = '';
-   $('previewBtn').disabled = false;
-   status('PDF ਖੁੱਲ੍ਹ ਗਈ। ਕੁੱਲ ਪੰਨੇ: '+pdf.numPages+'. ਹੁਣ ਪ੍ਰੀਵਿਊ ਬਣਾਓ।');
- } catch(e) {
-   $('pdfPassword').value = '';
-   status('PDF ਨਹੀਂ ਖੁੱਲ੍ਹੀ। ਪਾਸਵਰਡ ਚੈੱਕ ਕਰੋ ਜਾਂ ਵੇਖੋ ਕਿ PDF ਸਹੀ ਹੈ। ਵੇਰਵਾ: '+e.message);
- }
+  clearDocument();
+  pdfBytes = await file.arrayBuffer();
+  currentPassword = "";
+  $("passwordArea").hidden = false;
+  $("pdfPassword").value = "";
+  say("PDF ਤਿਆਰ ਹੈ। ਜੇ password ਲੱਗਾ ਹੈ ਤਾਂ ਦਰਜ ਕਰਕੇ Open PDF ਦਬਾਓ।");
+  try {
+    await openPdf("");
+  } catch (err) {
+    if (err && err.name === "PasswordException") {
+      say("ਇਹ PDF password-protected ਹੈ। Password ਭਰੋ।");
+    } else {
+      say("PDF ਨਹੀਂ ਖੁੱਲ੍ਹੀ। ਫਾਈਲ valid ਹੈ ਜਾਂ ਨਹੀਂ ਚੈੱਕ ਕਰੋ।");
+    }
+  }
 });
 
-function chosenPages(){
- const side = $('side').value;
- if(side==='front') return pages.slice(0,1);
- if(side==='back') return pages.slice(1,2);
- return pages.slice(0,2);
-}
-
-function markCorners(card){
- ['tl','tr','bl','br'].forEach(c=>{
-   const m=document.createElement('i'); m.className='cropmark '+c; card.appendChild(m);
- });
-}
-
-function renderPreview(){
- if(!pages.length) return;
- const host=$('preview');
- host.replaceChildren();
- const selected=chosenPages();
- if(!selected.length){status('ਚੁਣਿਆ ਹੋਇਆ ਪਾਸਾ PDF ਵਿੱਚ ਮੌਜੂਦ ਨਹੀਂ।');return;}
- const layout=$('layout').value;
- const copies=Number($('copies').value)||1;
- selected.forEach((page,idx)=>{
-   for(let c=0;c<copies;c++){
-     if(layout==='original'){
-       const sheet=document.createElement('div');sheet.className='sheet';
-       const img=document.createElement('img');
-       img.src=page.toDataURL('image/jpeg',0.95);
-       img.style.width='100%';img.style.height='100%';img.style.objectFit='contain';
-       sheet.appendChild(img);host.appendChild(sheet);
-     } else {
-       const sheet=document.createElement('div');sheet.className='sheet';
-       const card=document.createElement('div');card.className='card';
-       const img=document.createElement('img');
-       img.src=page.toDataURL('image/jpeg',0.95);
-       card.appendChild(img);markCorners(card);
-       sheet.appendChild(card);host.appendChild(sheet);
-     }
-   }
- });
- $('jpgBtn').disabled=false;
- $('pdfBtn').disabled=false;
- $('printBtn').disabled=false;
- status('ਪ੍ਰੀਵਿਊ ਤਿਆਰ ਹੈ। Pocket layout ਵਿੱਚ PDF ਪੰਨੇ ਨੂੰ ਕਾਰਡ ਦੇ ਅਨੁਪਾਤ ਵਿੱਚ ਫਿੱਟ ਕੀਤਾ ਗਿਆ ਹੈ।');
-}
-
-$('previewBtn').addEventListener('click',renderPreview);
-
-$('jpgBtn').addEventListener('click',()=>{
- const cards=$('preview').querySelectorAll('.card img');
- const images=cards.length ? Array.from(cards) : Array.from($('preview').querySelectorAll('.sheet img'));
- if(!images.length){status('ਪਹਿਲਾਂ ਪ੍ਰੀਵਿਊ ਬਣਾਓ।');return;}
- images.forEach((img,i)=>{
-   const a=document.createElement('a');
-   const canvas=document.createElement('canvas');
-   canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
-   canvas.getContext('2d').drawImage(img,0,0);
-   a.href=canvas.toDataURL('image/jpeg',0.95);
-   a.download='printcard-'+(i+1)+'.jpg';
-   document.body.appendChild(a);a.click();a.remove();
- });
+$("unlockBtn").addEventListener("click", async () => {
+  await openPdf($("pdfPassword").value);
 });
 
-$('pdfBtn').addEventListener('click',async()=>{
- try{
-   const {PDFDocument}=PDFLib;
-   const out=await PDFDocument.create();
-   const sheets=$('preview').querySelectorAll('.sheet');
-   for(const sheet of sheets){
-     const canvas=document.createElement('canvas');
-     const rect=sheet.getBoundingClientRect();
-     const w=layoutWidth(); const h=layoutHeight();
-     canvas.width=w;canvas.height=h;
-     const ctx=canvas.getContext('2d');
-     ctx.fillStyle='white';ctx.fillRect(0,0,w,h);
-     const imgs=sheet.querySelectorAll('img');
-     if(imgs.length){
-       if($('layout').value==='original'){
-         const img=imgs[0];
-         const scale=Math.min(w/img.naturalWidth,h/img.naturalHeight);
-         const iw=img.naturalWidth*scale,ih=img.naturalHeight*scale;
-         ctx.drawImage(img,(w-iw)/2,(h-ih)/2,iw,ih);
-       } else {
-         const cardW=w*0.88,cardH=cardW*54/85.6;
-         const x=(w-cardW)/2,y=(h-cardH)/2;
-         ctx.drawImage(img,x,y,cardW,cardH);
-         ctx.strokeStyle='#111';ctx.setLineDash([8,6]);ctx.strokeRect(x,y,cardW,cardH);
-       }
-     }
-     const jpg=await out.embedJpg(canvas.toDataURL('image/jpeg',0.95));
-     const p=out.addPage([595.28,841.89]);
-     p.drawImage(jpg,{x:0,y:0,width:595.28,height:841.89});
-   }
-   const bytes=await out.save();
-   downloadBlob(new Blob([bytes],{type:'application/pdf'}),'PrintCard-Aadhaar.pdf');
- }catch(e){status('PDF ਬਣਾਉਣ ਵਿੱਚ ਗੜਬੜ: '+e.message);}
+async function openPdf(password) {
+  if (!pdfBytes) return;
+  try {
+    say("PDF ਖੁੱਲ੍ਹ ਰਹੀ ਹੈ…");
+    const task = pdfjsLib.getDocument({
+      data: new Uint8Array(pdfBytes.slice(0)),
+      password: password || undefined
+    });
+    pdfDoc = await task.promise;
+    currentPassword = password;
+    $("pdfPassword").value = "";
+    $("passwordArea").hidden = true;
+    $("pageSelect").innerHTML = "";
+    for (let i=1; i<=pdfDoc.numPages; i++) {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = `Page ${i}`;
+      $("pageSelect").appendChild(opt);
+    }
+    $("pageSelect").disabled = false;
+    $("pageSelect").value = "1";
+    pageNum = 1;
+    await renderPage();
+    say(`PDF ਖੁੱਲ੍ਹ ਗਈ। ਕੁੱਲ ${pdfDoc.numPages} ਪੇਜ। Crop ਖੇਤਰ ਚੁਣੋ ਅਤੇ preview ਚੈੱਕ ਕਰੋ।`);
+  } catch (err) {
+    if (err && err.name === "PasswordException") {
+      $("passwordArea").hidden = false;
+      say("Password ਗਲਤ ਹੈ ਜਾਂ PDF password ਮੰਗ ਰਹੀ ਹੈ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।");
+    } else {
+      say("PDF ਖੋਲ੍ਹਣ ਵਿੱਚ ਸਮੱਸਿਆ ਆਈ।");
+    }
+    throw err;
+  }
+}
+
+$("pageSelect").addEventListener("change", async () => {
+  pageNum = Number($("pageSelect").value);
+  await renderPage();
 });
 
-function layoutWidth(){return 1240;}
-function layoutHeight(){return Math.round(1240*297/210);}
-function downloadBlob(blob,name){
- const url=URL.createObjectURL(blob);
- const a=document.createElement('a');a.href=url;a.download=name;
- document.body.appendChild(a);a.click();a.remove();
- setTimeout(()=>URL.revokeObjectURL(url),1500);
+async function renderPage() {
+  if (!pdfDoc) return;
+  if (renderTask) {
+    try { renderTask.cancel(); } catch (_) {}
+  }
+  const page = await pdfDoc.getPage(pageNum);
+  const base = page.getViewport({scale:1});
+  const scale = Math.min(1500 / base.width, 1800 / base.height, 2.0);
+  const viewport = page.getViewport({scale});
+  pageCanvas.width = Math.round(viewport.width);
+  pageCanvas.height = Math.round(viewport.height);
+  pageScale = scale;
+  renderTask = page.render({canvasContext:pageCtx, viewport});
+  try { await renderTask.promise; } catch (e) {
+    if (e && e.name === "RenderingCancelledException") return;
+    throw e;
+  }
+  pageImage = pageCtx.getImageData(0,0,pageCanvas.width,pageCanvas.height);
+  drawPageOverlay();
+  refreshPreviews();
+  enableReady(true);
 }
-$('printBtn').addEventListener('click',()=>window.print());
+
+function getCanvasPoint(event) {
+  const r = pageCanvas.getBoundingClientRect();
+  return {
+    x: Math.max(0, Math.min(pageCanvas.width, (event.clientX-r.left)*pageCanvas.width/r.width)),
+    y: Math.max(0, Math.min(pageCanvas.height, (event.clientY-r.top)*pageCanvas.height/r.height))
+  };
+}
+function rectFromPoints(a,b) {
+  return {x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),
+    w:Math.abs(a.x-b.x),h:Math.abs(a.y-b.y)};
+}
+pageCanvas.addEventListener("pointerdown", e => {
+  if (!pdfDoc) return;
+  dragStart = getCanvasPoint(e);
+  dragCurrent = dragStart;
+  pageCanvas.setPointerCapture(e.pointerId);
+});
+pageCanvas.addEventListener("pointermove", e => {
+  if (!dragStart) return;
+  dragCurrent = getCanvasPoint(e);
+  drawPageOverlay();
+});
+pageCanvas.addEventListener("pointerup", e => {
+  if (!dragStart) return;
+  dragCurrent = getCanvasPoint(e);
+  const r = rectFromPoints(dragStart,dragCurrent);
+  dragStart = null;
+  dragCurrent = null;
+  if (r.w > 12 && r.h > 12) {
+    crops[currentSide()] = r;
+    drawPageOverlay();
+    refreshPreviews();
+    say(`${currentSide()==="front"?"Front":"Back"} crop ਚੁਣਿਆ ਗਿਆ। Preview ਚੈੱਕ ਕਰੋ।`);
+  }
+});
+
+function drawPageOverlay() {
+  if (!pageImage) return;
+  pageCtx.putImageData(pageImage,0,0);
+  const all = [
+    {key:"front",color:"#e11d48"},
+    {key:"back",color:"#0d9488"}
+  ];
+  all.forEach(item => {
+    const r = crops[item.key];
+    if (!r || pageNum !== (r.page || pageNum)) return;
+    pageCtx.save();
+    pageCtx.strokeStyle = item.color;
+    pageCtx.lineWidth = Math.max(2,pageCanvas.width/600);
+    pageCtx.setLineDash([7,4]);
+    pageCtx.strokeRect(r.x,r.y,r.w,r.h);
+    pageCtx.fillStyle = item.color;
+    pageCtx.font = "bold 16px Arial";
+    pageCtx.fillText(item.key.toUpperCase(),r.x+4,Math.max(17,r.y-5));
+    pageCtx.restore();
+  });
+  if (dragStart && dragCurrent) {
+    const r = rectFromPoints(dragStart,dragCurrent);
+    pageCtx.save();
+    pageCtx.strokeStyle="#155eef";
+    pageCtx.lineWidth=3;
+    pageCtx.strokeRect(r.x,r.y,r.w,r.h);
+    pageCtx.restore();
+  }
+}
+
+$("activeSide").addEventListener("change", () => {
+  drawPageOverlay();
+});
+$("selectFront").addEventListener("click", () => { $("activeSide").value="front"; });
+$("selectBack").addEventListener("click", () => { $("activeSide").value="back"; });
+
+$("autoBtn").addEventListener("click", () => {
+  if (!pageImage) return;
+  /*
+   * Heuristic only: suggest the lower-left and lower-right
+   * areas common in some A4 Aadhaar print layouts.
+   * It does NOT verify that these rectangles contain a real card.
+   */
+  const w = pageCanvas.width, h = pageCanvas.height;
+  crops.front = {x:w*0.08,y:h*0.48,w:w*0.40,h:h*0.25,page:pageNum};
+  crops.back  = {x:w*0.52,y:h*0.48,w:w*0.40,h:h*0.25,page:pageNum};
+  drawPageOverlay();
+  refreshPreviews();
+  say("ਸ਼ੁਰੂਆਤੀ crop ਅੰਦਾਜ਼ਾ ਲਾਇਆ ਹੈ। ਜੇ ਬਾਕਸ ਗਲਤ ਹਨ ਤਾਂ ਉਨ੍ਹਾਂ ਨੂੰ ਹੱਥੀਂ drag ਕਰਕੇ ਠੀਕ ਕਰੋ।");
+});
+$("clearCropBtn").addEventListener("click", () => {
+  crops[currentSide()] = null;
+  drawPageOverlay();
+  refreshPreviews();
+});
+
+function makeCropCanvas(side) {
+  const r = crops[side];
+  if (!r || !pageImage || r.page && r.page !== pageNum) return null;
+  const x = Math.max(0,Math.floor(r.x));
+  const y = Math.max(0,Math.floor(r.y));
+  const w = Math.min(pageCanvas.width-x,Math.floor(r.w));
+  const h = Math.min(pageCanvas.height-y,Math.floor(r.h));
+  if (w < 10 || h < 10) return null;
+  const c = document.createElement("canvas");
+  c.width=w; c.height=h;
+  c.getContext("2d").drawImage(pageCanvas,x,y,w,h,0,0,w,h);
+  return c;
+}
+function refreshPreviews() {
+  ["front","back"].forEach(side => {
+    const c = makeCropCanvas(side);
+    $(side+"Preview").src = c ? c.toDataURL("image/jpeg",0.94) : "";
+  });
+}
+function selectedSides() {
+  const m=$("outputMode").value;
+  return m==="both" ? ["front","back"] : [m];
+}
+function validateCrops() {
+  const sides=selectedSides();
+  for (const side of sides) {
+    if (!crops[side]) {
+      say(`${side==="front"?"Front":"Back"} ਦਾ crop ਪਹਿਲਾਂ ਚੁਣੋ।`);
+      return false;
+    }
+    if (crops[side].page && crops[side].page!==pageNum) {
+      say("ਚੁਣਿਆ crop ਦੂਜੇ page ਦਾ ਹੈ। ਉਹ page ਖੋਲ੍ਹ ਕੇ export ਕਰੋ।");
+      return false;
+    }
+  }
+  return true;
+}
+function loadImage(src) {
+  return new Promise((resolve,reject) => {
+    const img=new Image();
+    img.onload=()=>resolve(img);
+    img.onerror=reject;
+    img.src=src;
+  });
+}
+function addMarks(ctx,x,y,w,h) {
+  const len=5;
+  ctx.save();
+  ctx.strokeStyle="#111";
+  ctx.lineWidth=.25;
+  [[x,y, -len,0],[x,y,0,-len],[x+w,y,len,0],[x+w,y,0,-len],
+   [x,y+h,-len,0],[x,y+h,0,len],[x+w,y+h,len,0],[x+w,y+h,0,len]]
+   .forEach(a=>{ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(a[0]+a[2],a[1]+a[3]);ctx.stroke();});
+  ctx.restore();
+}
+async function buildJpg() {
+  if (!validateCrops()) return null;
+  const sides=selectedSides();
+  const gap=24, margin=35, cardW=1012, cardH=Math.round(cardW*54/85.6);
+  const rows=sides.length;
+  const out=document.createElement("canvas");
+  out.width=cardW+margin*2;
+  out.height=rows*cardH+(rows+1)*gap;
+  const ctx=out.getContext("2d");
+  ctx.fillStyle="#fff"; ctx.fillRect(0,0,out.width,out.height);
+  for (let i=0;i<sides.length;i++) {
+    const c=makeCropCanvas(sides[i]);
+    if (!c) { say("Crop preview ਉਪਲਬਧ ਨਹੀਂ।"); return null; }
+    const img=await loadImage(c.toDataURL("image/jpeg",0.96));
+    const x=margin,y=gap+i*(cardH+gap);
+    // Fit inside target without stretching the source image.
+    const scale=Math.min(cardW/img.width,cardH/img.height);
+    const dw=img.width*scale,dh=img.height*scale;
+    const dx=x+(cardW-dw)/2,dy=y+(cardH-dh)/2;
+    ctx.drawImage(img,dx,dy,dw,dh);
+    if ($("cutMarks").checked) {
+      ctx.strokeStyle="#111"; ctx.lineWidth=2;
+      ctx.strokeRect(x,y,cardW,cardH);
+      const s=16;
+      ctx.beginPath();
+      ctx.moveTo(x-s,y);ctx.lineTo(x+s,y);
+      ctx.moveTo(x,y-s);ctx.lineTo(x,y+s);
+      ctx.moveTo(x+cardW-s,y+cardH);ctx.lineTo(x+cardW+s,y+cardH);
+      ctx.moveTo(x+cardW,y+cardH-s);ctx.lineTo(x+cardW,y+cardH+s);
+      ctx.stroke();
+    }
+  }
+  return out;
+}
+$("jpgBtn").addEventListener("click", async () => {
+  try {
+    say("JPG ਬਣ ਰਹੀ ਹੈ…");
+    const c=await buildJpg();
+    if (!c) return;
+    const a=document.createElement("a");
+    a.href=c.toDataURL("image/jpeg",0.96);
+    a.download="printcard.jpg";
+    a.click();
+    say("JPG download ਸ਼ੁਰੂ ਹੋ ਗਈ।");
+  } catch(e) { say("JPG ਬਣਾਉਣ ਵਿੱਚ ਸਮੱਸਿਆ ਆਈ।"); }
+});
+$("pdfBtn").addEventListener("click", async () => {
+  try {
+    say("PDF ਬਣ ਰਹੀ ਹੈ…");
+    const c=await buildJpg();
+    if (!c) return;
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+    const data=c.toDataURL("image/jpeg",0.96);
+    if ($("a4Output").checked) {
+      pdf.addImage(data,"JPEG",0,0,210,297);
+    } else {
+      const h=85.6*54/85.6;
+      pdf.addImage(data,"JPEG",10,10,190,Math.min(277,h*2+15));
+    }
+    pdf.save("printcard.pdf");
+    say("PDF download ਸ਼ੁਰੂ ਹੋ ਗਈ।");
+  } catch(e) { say("PDF ਬਣਾਉਣ ਵਿੱਚ ਸਮੱਸਿਆ ਆਈ।"); }
+});
+$("printBtn").addEventListener("click", async () => {
+  try {
+    say("Print file ਤਿਆਰ ਹੋ ਰਹੀ ਹੈ…");
+    const c=await buildJpg();
+    if (!c) return;
+    const url=c.toDataURL("image/jpeg",0.96);
+    const win=window.open("","_blank");
+    if (!win) {
+      say("Print window block ਹੋ ਗਈ। Browser ਵਿੱਚ pop-ups allow ਕਰੋ।");
+      return;
+    }
+    win.document.write(`<html><head><title>PrintCard</title>
+      <style>@page{size:A4;margin:0}body{margin:0}img{width:210mm;height:auto;display:block}</style>
+      </head><body><img src="${url}" onload="setTimeout(()=>window.print(),300)"></body></html>`);
+    win.document.close();
+    say("Print preview ਖੁੱਲ੍ਹ ਗਈ। Printer settings ਵਿੱਚ paper size ਅਤੇ scale ਚੈੱਕ ਕਰੋ।");
+  } catch(e) { say("Print ਤਿਆਰ ਨਹੀਂ ਹੋ ਸਕੀ।"); }
+});
+
+function clearDocument() {
+  if (renderTask) { try {renderTask.cancel();} catch(_){} }
+  pdfDoc=null; pageNum=1; pageImage=null; crops={front:null,back:null};
+  currentPassword=""; pdfBytes=null;
+  pageCanvas.width=0; pageCanvas.height=0;
+  $("pageSelect").innerHTML='<option>PDF upload ਕਰੋ</option>';
+  $("pageSelect").disabled=true;
+  $("passwordArea").hidden=true;
+  $("pdfPassword").value="";
+  $("frontPreview").removeAttribute("src");
+  $("backPreview").removeAttribute("src");
+  enableReady(false);
+}
+$("resetBtn").addEventListener("click", () => {
+  clearDocument();
+  $("pdfFile").value="";
+  $("status").textContent="ਸਭ ਕੁਝ clear ਹੋ ਗਿਆ। ਅਗਲੀ PDF ਚੁਣੋ।";
+});
+
+/* Changing output mode does not change source crops. */
+$("outputMode").addEventListener("change", () => {
+  say("Output ਚੁਣ ਲਿਆ। Export ਤੋਂ ਪਹਿਲਾਂ crop preview ਚੈੱਕ ਕਰੋ।");
+});
 </script>
 </body>
 </html>
